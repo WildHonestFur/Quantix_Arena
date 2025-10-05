@@ -120,7 +120,7 @@ export async function createParticipant(competitionId: number, values: Record<st
     if (existing.password_hash === passwordHash) {
       const cookieStore = await cookies();
       cookieStore.set({
-        name: 'participant_id',
+        name: 'participantId',
         value: existing.id,
         path: '/',
         secure: process.env.NODE_ENV === 'production',
