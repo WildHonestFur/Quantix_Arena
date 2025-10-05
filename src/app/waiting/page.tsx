@@ -54,7 +54,6 @@ export default async function WaitingPage() {
   const competition_id_parsed = competition_id ? parseInt(competition_id.value, 10) : null;
   const cid = await checkCompetitionId(competition_id_parsed);
   if (!cid.valid) {
-    console.log('cid');
     return redirect('/join');
   }
   const participant_id = cookieStore.get('participantId');
@@ -73,7 +72,6 @@ export default async function WaitingPage() {
     return redirect('/thanks');
   }
   if (!pid.valid) {
-    console.log('pid');
     return redirect('/join');
   }
 
