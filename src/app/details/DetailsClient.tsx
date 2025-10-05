@@ -20,6 +20,7 @@ export default function Details() {
   const router = useRouter();
   const [competitionID, setcompetitionID] = useState(0);
   const [fields, setFields] = useState<string[]>([]);
+  const [checks, setChecks] = useState<string[]>([]);
   const [values, setValues] = useState<{[key: string]: string}>({});
   const [showMessage, setShowMessage] = useState(false);
   const [message, setMessage] = useState('');
@@ -44,11 +45,11 @@ export default function Details() {
     let numBlocks: number;
     let size_mult: number;
     if (w < 640) {
-      numBlocks = 50;
+      numBlocks = 70;
       size_mult = 2
     } 
     else if (w < 1024) {
-      numBlocks = 100;
+      numBlocks = 120;
       size_mult = 3
     } 
     else {
@@ -135,6 +136,7 @@ export default function Details() {
     }
 
     setFields(res.data);
+    setChecks(res.checks);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -147,6 +149,21 @@ export default function Details() {
 
     if (hasEmpty) {
       setMessage('All fields must be filled');
+      setShowMessage(true);
+      setTimeout(() => setShowMessage(false), 3000);
+      return;
+    }
+
+    const hasInvalid = fields.some((field, i) => {
+      const val = values[field];
+      const pattern = checks[i];
+      
+      const regex = new RegExp(pattern);
+      return !regex.test(val);
+    });
+
+    if (hasInvalid) {
+      setMessage('Invalid field format');
       setShowMessage(true);
       setTimeout(() => setShowMessage(false), 3000);
       return;

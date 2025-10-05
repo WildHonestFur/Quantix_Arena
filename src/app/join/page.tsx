@@ -30,11 +30,11 @@ export default function Join() {
     let numBlocks: number;
     let size_mult: number;
     if (w < 640) {
-      numBlocks = 50;
+      numBlocks = 70;
       size_mult = 2
     } 
     else if (w < 1024) {
-      numBlocks = 100;
+      numBlocks = 120;
       size_mult = 3
     } 
     else {

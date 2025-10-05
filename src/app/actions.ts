@@ -65,18 +65,19 @@ export async function validateCompetition(code: string) {
 export async function fetchFields(competitionId: number) {
   const {data, error} = await supabase
     .from('competition_identifiers')
-    .select('identifier_name')
-    .eq('competition_id', competitionId);
+    .select('identifier_name, like_check')
+    .eq('competition_id', competitionId)
+    .order('id', {ascending: true});
 
   if (error) {
-    return {success: false, message: 'Server error', data: []};
+    return {success: false, message: 'Server error', data: [], checks: []};
   }
 
   if (!data || data.length === 0) {
-    return {success: true, message: '', data: []};
+    return {success: true, message: '', data: [], checks: []};
   }
 
-  return {success: true, message: '', data: data.map(row => row.identifier_name)};
+  return {success: true, message: '', data: data.map(row => row.identifier_name), checks: data.map(row => row.like_check)};
 }
 
 export async function verifyParticipant(competitionId: number, values: Record<string, string>) {
