@@ -1,13 +1,22 @@
 'use client';
 
-import {useEffect, useRef} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-export default function Home() {
+export default function NotFound() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true); 
+  }, []); 
+
+  useEffect(() => {
+    if (!mounted) {
+      return;
+    }
+
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext('2d')!;
     let w = (canvas.width = window.innerWidth);
@@ -91,7 +100,7 @@ export default function Home() {
       window.removeEventListener('resize', handleResize);
       document.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, []);
+  }, [mounted]);
 
   return (
     <>
@@ -101,29 +110,24 @@ export default function Home() {
       />
       <div className='font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20'>
         <main className='flex flex-col gap-[32px] row-start-2 items-center sm:items-start'>
-          <Image
-            src='/Quantix Arena.png'
-            alt='Quantix Arena logo'
-            width={600}
-            height={67}
-            priority
-          />
-          <ol className='font-mono list-inside list-decimal text-sm/6 text-center sm:text-left'>
-            <p className='mb-2 tracking-[-.01em]'>
-              Host and particiate in competitions with ease.
-            </p>
-          </ol>
-
-          <div className='flex gap-4 items-center flex-col sm:flex-row font-mono'>
-            <a
-              className='transition-all duration-300 ease-in-out rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-[#ffd700] text-background gap-2 hover:bg-[#FFC700] dark:hover:bg-[#FFC700] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto'
-            >
-              Host a Competition
-            </a>
-            <Link href='/join' className='transition-all duration-300 ease-in-out rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-[#c0c0c0] text-background gap-2 hover:bg-[#b4b4b4] dark:hover:bg-[#b4b4b4] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto'>
-              Enter a Competition
-            </Link>
+          <Link href='/'>
+            <Image
+                src='/Quantix Arena.png'
+                alt='Quantix Arena logo'
+                width={600}
+                height={67}
+                priority
+            />
+          </Link>
+          <div className='font-mono text-4xl'>
+              Error 404
           </div>
+          <p className='font-mono mb-2 tracking-[-.01em] text-sm/6'>
+            Oops! The page you&apos;re looking for doesn&apos;t exist.
+          </p>
+        <Link href='/' className='transition-all duration-300 ease-in-out rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-[#ffd700] text-background gap-2 hover:bg-[#FFC700] dark:hover:bg-[#FFC700] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto'>
+            Go to Home
+        </Link>
         </main>
       </div>
     </>

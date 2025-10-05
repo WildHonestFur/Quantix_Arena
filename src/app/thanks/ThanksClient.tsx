@@ -1,10 +1,23 @@
 'use client';
 
-import {useEffect, useRef} from 'react';
+import Link from 'next/link'
 import Image from 'next/image';
-import Link from 'next/link';
+import {useState, useEffect, useRef} from 'react';
+import {getStartTime} from '@funcs/actions';
 
-export default function Home() {
+function getCookie(name: string) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) {
+    return parts.pop()?.split(';').shift();
+  }
+  return undefined;
+}
+
+export default function ThanksClient() {
+  const [name, setName] = useState('Loading...');
+  const [showMessage, setShowMessage] = useState(false);
+  const [message, setMessage] = useState('');
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -93,36 +106,57 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    fetchStartTime();
+  }, []);
+
+  const fetchStartTime = async () => {
+    const id = parseInt(getCookie('competitionId') || '0', 10);
+    const res = await getStartTime(id);
+
+    if (!res.success) {
+      setMessage(res.message);
+      setShowMessage(true);
+      setTimeout(() => setShowMessage(false), 3000);
+      return;
+    }
+
+    setName(res.name);
+  };
+
   return (
     <>
       <canvas
         ref={canvasRef}
         className="fixed inset-0 -z-10"
       />
-      <div className='font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20'>
+      <div className='flex flex-col items-center min-h-screen p-8 pb-20 gap-16 sm:p-20'>
         <main className='flex flex-col gap-[32px] row-start-2 items-center sm:items-start'>
-          <Image
-            src='/Quantix Arena.png'
-            alt='Quantix Arena logo'
-            width={600}
-            height={67}
-            priority
-          />
+          <Link href='/'>
+            <Image
+              src='/Quantix Arena.png'
+              alt='Quantix Arena logo'
+              width={600}
+              height={67}
+              priority
+            />
+          </Link>
+          <div className='font-mono text-2xl'>
+            {name}
+          </div>
           <ol className='font-mono list-inside list-decimal text-sm/6 text-center sm:text-left'>
             <p className='mb-2 tracking-[-.01em]'>
-              Host and particiate in competitions with ease.
+              <span className='text-[#ffd700]'>Thanks for participating in the competition! </span>
+              {'Your responses have been saved. It\'s time to take a well-deserved break. Stretch, grab some snacks, touch grass, and come back later to check your results!'}
+            </p>
+            <p className='mb-2 tracking-[-.01em]'>
+              {'Got any feedback or ideas? Shoot an email at '}
+              <span className='text-[#c0c0c0]'>wildhonestfur@gmail.com</span>
+              {'. All feedback is appreciated!'}
             </p>
           </ol>
-
-          <div className='flex gap-4 items-center flex-col sm:flex-row font-mono'>
-            <a
-              className='transition-all duration-300 ease-in-out rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-[#ffd700] text-background gap-2 hover:bg-[#FFC700] dark:hover:bg-[#FFC700] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto'
-            >
-              Host a Competition
-            </a>
-            <Link href='/join' className='transition-all duration-300 ease-in-out rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-[#c0c0c0] text-background gap-2 hover:bg-[#b4b4b4] dark:hover:bg-[#b4b4b4] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto'>
-              Enter a Competition
-            </Link>
+          <div className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-[#ffd700] text-background px-4 py-2 rounded shadow-md transition-opacity duration-500 font-mono ${showMessage ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            {message}
           </div>
         </main>
       </div>
