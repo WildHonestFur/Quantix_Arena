@@ -34,42 +34,57 @@ export default function WaitingClient() {
   useEffect(() => {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext('2d')!;
-    let w = (canvas.width = window.innerWidth);
-    let h = (canvas.height = window.innerHeight);
 
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = w * dpr;
-    canvas.height = h * dpr;
-    ctx.scale(dpr, dpr);
+    const resizeCanvas = () => {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
 
-    let numBlocks: number;
-    let size_mult: number;
-    if (w < 640) {
-      numBlocks = 70;
-      size_mult = 2
-    } 
-    else if (w < 1024) {
-      numBlocks = 120;
-      size_mult = 3
-    } 
-    else {
-      numBlocks = 180;
-      size_mult = 4
-    }
-    const blocks = Array.from({length: numBlocks}, () => {
-      return {
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpr, dpr);
+    };
+
+    resizeCanvas();
+
+    const getBlocks = (w: number, h: number) => {
+      let numBlocks: number;
+      let size_mult: number;
+
+      if (w < 640) {
+        numBlocks = 70;
+        size_mult = 2;
+      }
+      else if (w < 1024) {
+        numBlocks = 120;
+        size_mult = 3;
+      }
+      else if (w < 2000) {
+        numBlocks = 180;
+        size_mult = 4;
+      }
+      else {
+        numBlocks = 250;
+        size_mult = 5;
+      }
+
+      return Array.from({length: numBlocks}, () => ({
         x: Math.random() * w,
         y: Math.random() * h,
         size: Math.random() * size_mult + 1,
         color: Math.random() > 0.5 ? '#FFD700' : '#C0C0C0',
         speed: Math.random() * 0.4 + 0.3,
         opacity: Math.random() * 0.4 + 0.4,
-      };
-    });
+      }));
+    };
 
     let animationId: number;
+    let blocks = getBlocks(canvas.clientWidth, canvas.clientHeight);
 
     const draw = () => {
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
       ctx.clearRect(0, 0, w, h);
 
       for (const b of blocks) {
@@ -91,13 +106,8 @@ export default function WaitingClient() {
     draw();
 
     const handleResize = () => {
-      w = canvas.width = window.innerWidth;
-      h = canvas.height = window.innerHeight;
-
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
-      ctx.scale(dpr, dpr);
+      resizeCanvas();
+      blocks = getBlocks(canvas.clientWidth, canvas.clientHeight);
     };
 
     const handleVisibility = () => {
@@ -111,7 +121,9 @@ export default function WaitingClient() {
 
     window.addEventListener('resize', handleResize);
     document.addEventListener('visibilitychange', handleVisibility);
+
     return () => {
+      cancelAnimationFrame(animationId);
       window.removeEventListener('resize', handleResize);
       document.removeEventListener('visibilitychange', handleVisibility);
     };
@@ -187,7 +199,7 @@ export default function WaitingClient() {
     <>
       <canvas
         ref={canvasRef}
-        className="fixed inset-0 -z-10"
+        className="fixed inset-0 -z-10 w-screen h-screen"
       />
       <div className='flex flex-col items-center min-h-screen p-8 pb-20 gap-16 sm:p-20'>
         <main className='flex flex-col gap-[32px] row-start-2 items-center sm:items-start'>
