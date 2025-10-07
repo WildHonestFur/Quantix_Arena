@@ -219,7 +219,7 @@ export default function WaitingClient() {
             <p className='mb-2 tracking-[-.01em]'>
               The competition starts in:
             </p>
-            <div className='font-mono text-4xl'>
+            <div className='font-mono text-[2.1rem] sm:text-4xl'>
               <span className='text-[#c0c0c0]'>{String(timeLeft.days).padStart(2, '0')}</span>
               <span className='text-[#ffd700]'>d </span>
               <span className='text-[#c0c0c0]'>{String(timeLeft.hours).padStart(2, '0')}</span>
