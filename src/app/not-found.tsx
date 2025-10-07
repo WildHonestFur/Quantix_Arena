@@ -122,7 +122,7 @@ export default function NotFound() {
           <div className='font-mono text-4xl'>
               Error 404
           </div>
-          <p className='font-mono mb-2 tracking-[-.01em] text-sm/6'>
+          <p className='font-mono mb-2 tracking-[-.01em] text-center sm:text-left text-sm/6'>
             Oops! The page you&apos;re looking for doesn&apos;t exist.
           </p>
         <Link href='/' className='transition-all duration-300 ease-in-out rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-[#ffd700] text-background gap-2 hover:bg-[#FFC700] dark:hover:bg-[#FFC700] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto'>

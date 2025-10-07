@@ -144,7 +144,7 @@ export default function OverClient() {
           <div className='font-mono text-2xl'>
             {name}
           </div>
-          <ol className='font-mono list-inside list-decimal text-sm/6 text-center sm:text-left'>
+          <ol className='font-mono list-inside list-decimal text-sm/6 sm:text-left'>
             <p className='mb-2 tracking-[-.01em]'>
               <span className='text-[#ffd700]'>The competition is over, </span>
               <span className='text-[#ffd700]'>but results aren&apos;t out yet!</span>

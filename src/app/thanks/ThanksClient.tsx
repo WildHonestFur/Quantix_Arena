@@ -144,7 +144,7 @@ export default function ThanksClient() {
           <div className='font-mono text-2xl'>
             {name}
           </div>
-          <ol className='font-mono list-inside list-decimal text-sm/6 text-center sm:text-left'>
+          <ol className='font-mono list-inside list-decimal text-sm/6 sm:text-left'>
             <p className='mb-2 tracking-[-.01em]'>
               <span className='text-[#ffd700]'>Thanks for participating in the competition! </span>
               {'Your responses have been saved. It\'s time to take a well-deserved break. Stretch, grab some snacks, touch grass, and come back later to check your results!'}
