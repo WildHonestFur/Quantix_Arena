@@ -76,7 +76,7 @@ export default function Details() {
         ctx.fillStyle = `${b.color}${Math.floor(b.opacity * 255)
           .toString(16)
           .padStart(2, '0')}`;
-        ctx.fillRect(Math.floor(b.x), Math.floor(b.y), b.size, b.size);
+        ctx.fillRect(b.x, b.y, b.size, b.size);
 
         b.y += b.speed;
         if (b.y > h) {
