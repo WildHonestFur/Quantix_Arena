@@ -4,17 +4,19 @@ import {supabase} from '@lib/supabaseClient';
 import {cookies} from 'next/headers';
 import crypto from 'crypto';
 
-type QuestionOption = { option_text: string };
+type QuestionOption = {option_text: string};
 type Question = {
   question: string;
-  id: number,
+  id: number;
   type: 'mcq' | 'fill';
   options: string[];
+  diagram?: string | null;
 };
 type RawQuestion = {
   question: string;
   type: 'mcq' | 'fill';
   id: number;
+  diagram?: string | null;
   question_options: QuestionOption[];
 };
 
@@ -30,7 +32,9 @@ function getPasswordHash(password: string) {
   return crypto.createHash('md5').update(password).digest('hex');
 }
 
-export async function validateCompetition(code: string) {
+export async function validateCompetition(unprocessed_code: string) {
+  const code = unprocessed_code.trim().toLowerCase();
+
   const {data, error} = await supabase
     .from('competitions')
     .select('id, start_datetime, end_datetime, released_scores')
@@ -198,7 +202,7 @@ export async function getContestData(competitionId: number) {
 
   const {data: questionsData, error: qerror} = await supabase
     .from('questions')
-    .select('question, type, id, question_options(option_text)')
+    .select('question, type, id, diagram, question_options(option_text)')
     .eq('competition_id', competitionId)
     .order('order_index', {ascending: true});
 
@@ -210,7 +214,8 @@ export async function getContestData(competitionId: number) {
     question: q.question,
     type: q.type,
     id: q.id,
-    options: q.type === 'mcq' ? q.question_options.map((opt: QuestionOption) => opt.option_text) : []
+    options: q.type === 'mcq' ? q.question_options.map((opt: QuestionOption) => opt.option_text) : [],
+    diagram: q.diagram || null
   }));
 
   return {success: true, end: data.end_datetime, name: data.name, questions: formattedQuestions, message: ''};

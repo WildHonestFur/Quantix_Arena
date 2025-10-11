@@ -8,8 +8,9 @@ import {MathJax, MathJaxContext} from 'better-react-mathjax';
 
 type QuestionType = {
   type: 'mcq' | 'fill';
-  id: number,
+  id: number;
   question: string;
+  diagram?: string | null;
   options: string[];
 };
 
@@ -276,6 +277,16 @@ export default function ContestClient() {
                 <p className='mb-2 tracking-[-.01em]'>
                   <MathJax>{`${i + 1}. ${q.question}`}</MathJax>
                 </p>
+                
+                {q.diagram && (
+                  <div className='h-80'>
+                    <img
+                      src={q.diagram}
+                      alt="Diagram"
+                      className="h-full w-auto"
+                    />
+                  </div>
+                )}
 
                 {q.type === 'mcq' && (
                   <div className='flex flex-col gap-4 w-full font-mono text-xl'>
