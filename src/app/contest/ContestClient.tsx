@@ -274,19 +274,23 @@ export default function ContestClient() {
           <form className='flex flex-col gap-4 w-full font-mono text-xl space-y-8'>
             {questions.map((q, i) => (
               <div key={i} className='flex flex-col gap-4'>
-                <p className='mb-2 tracking-[-.01em]'>
-                  <MathJax>{`${i + 1}. ${q.question}`}</MathJax>
-                </p>
-                
-                {q.diagram && (
-                  <div className='h-80'>
-                    <img
-                      src={q.diagram}
-                      alt="Diagram"
-                      className="h-full w-auto"
-                    />
+                <div className='overflow-x-auto overflow-y-hidden'>
+                  <div className="inline-block min-w-full">
+                    <p className='mb-2 tracking-[-.01em]'>
+                      <MathJax>{`${i + 1}. ${q.question}`}</MathJax>
+                    </p>
+                    
+                    {q.diagram && (
+                      <div className='h-80'>
+                        <img
+                          src={q.diagram}
+                          alt="Diagram"
+                          className="h-full w-auto"
+                        />
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
 
                 {q.type === 'mcq' && (
                   <div className='flex flex-col gap-4 w-full font-mono text-xl'>
