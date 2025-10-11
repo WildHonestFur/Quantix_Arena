@@ -245,7 +245,7 @@ export default function ContestClient() {
 
   return (
     <div className='flex flex-col items-center min-h-screen p-8 pb-20 gap-16 sm:p-20'>
-      <main className='flex flex-col gap-[32px] row-start-2 items-center sm:items-start'>
+      <main className='flex flex-col gap-[32px] row-start-2 items-stretch sm:items-start w-full max-w-3xl'>
         <Image
           src='/Quantix Arena.png'
           alt='Quantix Arena logo'
@@ -256,7 +256,7 @@ export default function ContestClient() {
         <div className='font-mono text-2xl'>
             {name}
         </div>
-        <ol className='font-mono list-inside list-decimal text-sm/6 text-center sm:text-left'>
+        <ol className='font-mono list-inside list-decimal text-sm/6 text-left w-full'>
           <p className='mb-2 tracking-[-.01em]'>
             Time remaining:
           </p>
@@ -271,7 +271,7 @@ export default function ContestClient() {
         </ol>
 
         <MathJaxContext>
-          <form className='flex flex-col gap-4 w-full font-mono text-xl space-y-8'>
+          <form className='flex flex-col gap-4 w-full font-mono text-xl space-y-8 px-2 sm:px-0'>
             {questions.map((q, i) => (
               <div key={i} className='flex flex-col gap-4'>
                 <p className='mb-2 tracking-[-.01em]'>
