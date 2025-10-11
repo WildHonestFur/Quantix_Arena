@@ -245,7 +245,7 @@ export default function ContestClient() {
 
   return (
     <div className='flex flex-col items-center min-h-screen p-8 pb-20 gap-16 sm:p-20'>
-      <main className='flex flex-col gap-10 sm:gap-16 row-start-2 items-stretch sm:items-start w-full max-w-6xl px-4 sm:px-20'>
+      <main className='flex flex-col gap-[32px] row-start-2 items-center sm:items-start'>
         <Image
           src='/Quantix Arena.png'
           alt='Quantix Arena logo'
@@ -256,7 +256,7 @@ export default function ContestClient() {
         <div className='font-mono text-2xl'>
             {name}
         </div>
-        <ol className='font-mono list-inside list-decimal text-sm/6 text-left w-full'>
+        <ol className='font-mono list-inside list-decimal text-sm/6 text-left'>
           <p className='mb-2 tracking-[-.01em]'>
             Time remaining:
           </p>
