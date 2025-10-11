@@ -256,7 +256,7 @@ export default function ContestClient() {
         <div className='font-mono text-2xl'>
             {name}
         </div>
-        <ol className='font-mono list-inside list-decimal text-sm/6 text-left'>
+        <ol className='font-mono list-inside list-decimal text-sm/6 text-center sm:text-left'>
           <p className='mb-2 tracking-[-.01em]'>
             Time remaining:
           </p>
