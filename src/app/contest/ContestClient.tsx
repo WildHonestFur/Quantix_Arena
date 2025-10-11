@@ -245,7 +245,7 @@ export default function ContestClient() {
 
   return (
     <div className='flex flex-col items-center min-h-screen p-8 pb-20 gap-16 sm:p-20'>
-      <main className='flex flex-col gap-[32px] row-start-2 items-center sm:items-start'>
+      <main className='flex flex-col gap-[32px] row-start-2 items-start'>
         <Image
           src='/Quantix Arena.png'
           alt='Quantix Arena logo'
@@ -285,7 +285,7 @@ export default function ContestClient() {
                         <img
                           src={q.diagram}
                           alt="Diagram"
-                          className="h-full w-auto"
+                          className="h-full w-auto max-w-full"
                         />
                       </div>
                     )}
