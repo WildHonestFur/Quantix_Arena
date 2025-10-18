@@ -210,7 +210,7 @@ export default function Results() {
       )}
       {showResults && (
         <>
-          <main className='flex flex-col gap-[32px] row-start-2 items-center sm:items-start w-full max-w-5xl'>
+          <main className='flex flex-col gap-[32px] row-start-2 items-start w-full max-w-5xl'>
             <Image
               src='/Quantix Arena.png'
               alt='Quantix Arena logo'
@@ -222,27 +222,28 @@ export default function Results() {
                 {name}
             </div>
 
-            <ol className='font-mono list-inside list-decimal text-sm/6 text-left'>
+            <ol className='font-mono list-inside list-decimal text-sm/6 text-left w-full'>
               {fields.map((fieldName) => (
                 fieldName !== 'Password' ? (
-                  <div className='overflow-x-auto overflow-y-hidden w-full max-w-full' key={fieldName}>
-                    <div className='whitespace-nowrap inline-block font-mono text-xl'>
-                      <span className='text-[#c0c0c0]'>{fieldName}: </span>
-                      <span className='text-[#ffd700]'>{values[fieldName]}</span>
-                    </div>
+                  <div 
+                    className='overflow-x-auto whitespace-nowrap max-w-full font-mono text-lg'
+                    key={fieldName}
+                  >
+                    <span className='text-[#c0c0c0]'>{fieldName}: </span>
+                    <span className='text-[#ffd700]'>{values[fieldName]}</span>
                   </div>
                 ) : null
               ))}
             </ol>
             
-            <ol className='font-mono list-inside list-decimal text-sm/6 text-left'>
+            <ol className='font-mono list-inside list-decimal text-sm/6'>
               <div className='font-mono text-xl'>
                 <span className='text-[#c0c0c0]'>Score: </span>
                 <span className='text-[#ffd700]'>{score}/{maxScore}</span>
               </div>
             </ol>
 
-            <form className='flex flex-col gap-4 w-full font-mono text-sm space-y-8'>
+            <form className='flex flex-col gap-4 w-full font-mono text-md space-y-8'>
               <div className='flex flex-col gap-2'>
                 <div className='overflow-x-auto overflow-y-hidden'>
                   <div className="inline-block min-w-full">
@@ -252,7 +253,7 @@ export default function Results() {
                   </div>
                 </div>
 
-                <div className='flex flex-col gap-4 w-full font-mono text-sm'>
+                <div className='flex flex-col gap-4 w-full font-mono text-md'>
                   <label className='flex items-center gap-3 select-none'>
                     <input
                       type='checkbox'
