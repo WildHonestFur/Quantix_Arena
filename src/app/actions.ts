@@ -18,6 +18,16 @@ type RawQuestion = {
   id: number;
   diagram?: string | null;
   question_options: QuestionOption[];
+  answer: string;
+  points: number;
+};
+type ParticipantAnswer = {
+  question_id: number;
+  question_text: string;
+  question_type: 'mcq' | 'fill';
+  submitted_answer: string;
+  correct_answer: string;
+  points: number;
 };
 
 function getIdentifiersHash(values: Record<string, string>) {
@@ -202,7 +212,7 @@ export async function getContestData(competitionId: number) {
 
   const {data: questionsData, error: qerror} = await supabase
     .from('questions')
-    .select('question, type, id, diagram, question_options(option_text)')
+    .select('question, type, id, diagram, question_options(option_text), answer, points')
     .eq('competition_id', competitionId)
     .order('order_index', {ascending: true});
 
@@ -218,7 +228,23 @@ export async function getContestData(competitionId: number) {
     diagram: q.diagram || null
   }));
 
-  return {success: true, end: data.end_datetime, name: data.name, questions: formattedQuestions, message: ''};
+  const answersDict: Record<number, string> = (questionsData || []).reduce(
+    (acc, q: RawQuestion) => {
+      acc[q.id] = q.answer;
+      return acc;
+    },
+    {} as Record<number, string>
+  );
+
+  const pointsDict: Record<number, number> = (questionsData || []).reduce(
+    (acc, q: RawQuestion) => {
+      acc[q.id] = q.points;
+      return acc;
+    },
+    {} as Record<number, number>
+  );
+
+  return {success: true, end: data.end_datetime, name: data.name, questions: formattedQuestions, answers: answersDict, points: pointsDict, message: ''};
 }
 
 export async function submit(competitionId: number, participantId: number, values: Record<number, string>) {
@@ -328,4 +354,73 @@ export async function leave(participantId: number) {
   }
 
   return {success: true, message: ''};
+}
+
+export async function verifyParticipantResults(competitionId: number, values: Record<string, string>) {
+  const identifiers = Object.fromEntries(
+    Object.entries(values).filter(([key]) => key !== 'Password')
+  );
+  const identifiersHash = getIdentifiersHash(identifiers);
+  const passwordHash = getPasswordHash(values['Password']);
+
+  const {data: existing, error: checkError} = await supabase
+    .from('participants')
+    .select('*')
+    .eq('competition_id', competitionId)
+    .eq('identifiers_hash', identifiersHash)
+    .eq('password_hash', passwordHash)
+    .maybeSingle();
+
+  if (checkError) {
+    return {success: false, message: 'Server error'};
+  }
+
+  if (!existing) {
+    return {success: false, message: 'Participant not found'};
+  }
+
+  return {success: true, message: '', pid: existing.id};
+}
+
+export async function getResults(competitionId: number, participantId: number) {
+  const {data, error} = await supabase.rpc('get_participant_score', {
+    p_pid: participantId,
+    p_cid: competitionId
+  });
+
+  if (error) {
+    return {success: false, message: 'Server error'};
+  }
+
+  if (!data || data.length === 0) {
+    return {success: false, message: 'Participant not found'};
+  }
+
+  const row = data[0];
+  return {success: true, message: '', identifiers: row.identifiers, score: row.total_score, submit_time: row.submit_time, max: row.max_score};
+}
+
+export async function getAnswers(competitionId: number, participantId: number) {
+  const {data, error} = await supabase.rpc('get_participant_answers', {
+    p_pid: participantId,
+    p_cid: competitionId
+  });
+
+  if (error) {
+    return {success: false, message: 'Server error'};
+  }
+
+  const answersArray = data as ParticipantAnswer[];
+
+  const answersDict: Record<number, string> = answersArray.reduce((acc, ans) => {
+    acc[ans.question_id] = ans.submitted_answer;
+    return acc;
+  }, {} as Record<number, string>);
+
+  const pointsReceived: Record<number, number> = answersArray.reduce((acc, ans) => {
+    acc[ans.question_id] = ans.points;
+    return acc;
+  }, {} as Record<number, number>);
+
+  return {success: true, message: '', answers: answersDict, points: pointsReceived};
 }
