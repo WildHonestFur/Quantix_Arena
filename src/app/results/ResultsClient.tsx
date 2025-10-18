@@ -225,8 +225,8 @@ export default function Results() {
             <ol className='font-mono list-inside list-decimal text-sm/6 text-left'>
               {fields.map((fieldName) => (
                 fieldName !== 'Password' ? (
-                  <div className='overflow-x-auto overflow-y-hidden'>
-                    <div className='font-mono text-xl' key={fieldName}>
+                  <div className='overflow-x-auto overflow-y-hidden' key={fieldName}>
+                    <div className='font-mono text-xl'>
                       <span className='text-[#c0c0c0]'>{fieldName}: </span>
                       <span className='text-[#ffd700]'>{values[fieldName]}</span>
                     </div>
