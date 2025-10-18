@@ -226,7 +226,7 @@ export default function Results() {
               {fields.map((fieldName) => (
                 fieldName !== 'Password' ? (
                   <div className='overflow-x-auto overflow-y-hidden' key={fieldName}>
-                    <div className='inline-block min-w-full font-mono text-xl'>
+                    <div className='whitespace-nowrap inline-block min-w-full font-mono text-xl'>
                       <span className='text-[#c0c0c0]'>{fieldName}: </span>
                       <span className='text-[#ffd700]'>{values[fieldName]}</span>
                     </div>
@@ -245,7 +245,7 @@ export default function Results() {
             <form className='flex flex-col gap-4 w-full font-mono text-sm space-y-8'>
               <div className='flex flex-col gap-2'>
                 <div className='overflow-x-auto overflow-y-hidden'>
-                  <div className="whitespace-nowrap inline-block min-w-full">
+                  <div className="inline-block min-w-full">
                     <p className='mb-2 tracking-[-.01em]'>
                       Key:
                     </p>
