@@ -57,23 +57,7 @@ export default function ParticipantsClient({id}: {id: string}) {
         removeRule: (id: string) => void;
     }
 
-    const [sortRules, setSortRules] = useState<SortRule[]>([
-    {
-        id: '1',
-        key: 'Score',
-        direction: 'asc',
-    },
-    {
-        id: '2',
-        key: 'Completion Time',
-        direction: 'desc',
-    },
-    {
-        id: '3',
-        key: 'Random',
-        direction: 'desc',
-    },
-    ])
+    const [sortRules, setSortRules] = useState<SortRule[]>([])
 
     const availableMetrics = [
         {id: '1', key: 'Score'},
@@ -163,7 +147,7 @@ export default function ParticipantsClient({id}: {id: string}) {
         };
 
         return (
-            <div ref={setNodeRef} style={style} className={`${isDragging ? "z-10 border-black" : "border-[#c0c0c0]"} border-2 flex items-center justify-between px-2 py-1 rounded-lg bg-[#c0c0c0] text-sm`} {...attributes}>
+            <div ref={setNodeRef} style={style} className={`${isDragging ? "z-10 border-black" : "border-[#c0c0c0]"} border-2 flex items-center justify-between px-2 py-1 rounded-lg bg-[#c0c0c0] text-sm gap-1`} {...attributes}>
                 <div className="flex items-center gap-2">
                     <GripHorizontal {...listeners} className="h-4 w-4 cursor-grab"/>
                     <span>{rule.key}</span>
@@ -224,7 +208,7 @@ export default function ParticipantsClient({id}: {id: string}) {
                                 <input
                                     type="text"
                                     placeholder="Search"
-                                    className="block sm:hidden w-full pl-10 pr-4 py-2 rounded-lg border-2 border-[#b1b1b1] bg-[#b1b1b1] text-sm focus:outline-none focus:ring-2 focus:ring-[#b1b1b1] focus:ring focus:ring-offset-2 focus:ring-offset-[#c0c0c0] hover:bg-[#c0c0c0] transition duration-300"
+                                    className="block sm:hidden w-full pl-10 pr-4 py-2 rounded-lg border-2 border-[#b1b1b1] bg-[#b1b1b1] text-xs focus:outline-none focus:ring-2 focus:ring-[#b1b1b1] focus:ring focus:ring-offset-2 focus:ring-offset-[#c0c0c0] hover:bg-[#c0c0c0] transition duration-300"
                                 />
                                 <input
                                     type="text"
@@ -235,7 +219,7 @@ export default function ParticipantsClient({id}: {id: string}) {
                             <div className="mb-2 relative" ref={dropdownRef}>
                                 <button
                                     onClick={() => setOpen(!open)}
-                                    className="flex items-center gap-2 px-3 py-2 rounded-lg border-2 border-[#b1b1b1] bg-[#b1b1b1] text-sm hover:bg-[#c0c0c0] cursor-pointer transition duration-300"
+                                    className="flex items-center gap-2 px-3 py-2 rounded-lg border-2 border-[#b1b1b1] bg-[#b1b1b1] sm:text-sm text-xs hover:bg-[#c0c0c0] cursor-pointer transition duration-300"
                                 >
                                     <ArrowUpDown className="h-4 w-4"/>
                                     Sort
@@ -246,7 +230,7 @@ export default function ParticipantsClient({id}: {id: string}) {
                                         animate={{opacity: 1, y: 0, scale: 1}}
                                         exit={{opacity: 0, y: -6}}
                                         transition={{duration: 0.2}}
-                                        className="absolute right-0 mt-2 w-85 bg-[#b1b1b1] border-2 border-background rounded-lg shadow-lg p-4 z-45"
+                                        className="absolute right-0 mt-2 w-82 bg-[#b1b1b1] border-2 border-background rounded-lg shadow-lg p-4 z-45"
                                     >
                                         <p className="text-sm font-[475] mb-3">Sort by</p>
 
@@ -374,7 +358,7 @@ export default function ParticipantsClient({id}: {id: string}) {
                             </table>
                         </div>
                     </div>
-                    <div className="flex items-center justify-between mt-4 px-1 text-sm text-background">
+                    <div className="flex items-center justify-between mt-4 px-1 sm:text-sm text-xs text-background">
                         <div className='flex items-center cursor-pointer'>
                             <span>
                                 <ChevronLeft/>
