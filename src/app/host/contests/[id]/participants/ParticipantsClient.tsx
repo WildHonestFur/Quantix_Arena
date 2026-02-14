@@ -199,10 +199,10 @@ export default function ParticipantsClient({id}: {id: string}) {
                     </div>
                 </div>
                 <div className="w-full rounded-xl p-6 bg-[#c0c0c0] text-background">
-                    <div className="flex items-center justify-between items-center gap-5">
+                    <div className="flex flex-col sm:flex-row items-center sm:justify-between sm:items-center items-start sm:gap-5">
                         <h2 className="text-base font-medium mb-2">Participants</h2>
-                        <div className="flex items-center gap-3">
-                            <div className="mb-2 relative w-full max-w-sm">
+                        <div className="flex items-center gap-3 w-full sm:w-auto">
+                            <div className="sm:mb-2 mb-1 relative w-full sm:max-w-sm">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#707070]"/>
 
                                 <input
@@ -216,7 +216,7 @@ export default function ParticipantsClient({id}: {id: string}) {
                                     className="sm:block hidden w-full pl-10 pr-4 py-2 rounded-lg border-2 border-[#b1b1b1] bg-[#b1b1b1] text-sm focus:outline-none focus:ring-2 focus:ring-[#b1b1b1] focus:ring focus:ring-offset-2 focus:ring-offset-[#c0c0c0] hover:bg-[#c0c0c0] transition duration-300"
                                 />
                             </div>
-                            <div className="mb-2 relative" ref={dropdownRef}>
+                            <div className="sm:mb-2 mb-1 relative" ref={dropdownRef}>
                                 <button
                                     onClick={() => setOpen(!open)}
                                     className="flex items-center gap-2 px-3 py-2 rounded-lg border-2 border-[#b1b1b1] bg-[#b1b1b1] sm:text-sm text-xs hover:bg-[#c0c0c0] cursor-pointer transition duration-300"
@@ -230,7 +230,7 @@ export default function ParticipantsClient({id}: {id: string}) {
                                         animate={{opacity: 1, y: 0, scale: 1}}
                                         exit={{opacity: 0, y: -6}}
                                         transition={{duration: 0.2}}
-                                        className="absolute right-0 mt-2 w-82 bg-[#b1b1b1] border-2 border-background rounded-lg shadow-lg p-4 z-45"
+                                        className="absolute right-0 mt-2 w-83 bg-[#b1b1b1] border-2 border-background rounded-lg shadow-lg p-4 z-45"
                                     >
                                         <p className="text-sm font-[475] mb-3">Sort by</p>
 
@@ -363,15 +363,20 @@ export default function ParticipantsClient({id}: {id: string}) {
                             <span>
                                 <ChevronLeft/>
                             </span>
-                            <span>
+                            <span className="sm:block hidden">
                                 Previous
                             </span>
                         </div>
-                        <span className="text-[#707070]">
-                            Showing 51-100 of 128
-                        </span>
+                        <div>
+                            <span className="text-[#707070] hidden sm:block">
+                                Showing 51-100 of 128
+                            </span>
+                            <span className="text-[#707070] block sm:hidden">
+                                51-100 of 128
+                            </span>
+                        </div>
                         <div className='flex items-center cursor-pointer'>
-                            <span>
+                            <span className="sm:block hidden">
                                 Next
                             </span>
                             <span>
