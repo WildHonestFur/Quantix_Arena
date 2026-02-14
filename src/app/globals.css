@@ -52,3 +52,9 @@ body {
 ::-webkit-scrollbar-corner {
   background: var(--background);
 }
+
+.recharts-wrapper:focus,
+.recharts-surface:focus,
+.recharts-wrapper *:focus {
+  outline: none !important;
+}
