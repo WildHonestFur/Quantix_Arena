@@ -2,19 +2,17 @@
 
 import Link from 'next/link'
 import Image from 'next/image';
-import {Users, FileText, Calendar, Hourglass, Clock8, Clock10, Clock12} from "lucide-react";
-import {useState, useEffect, useTransition, useRef} from 'react';
+import {Users, FileText, Calendar} from "lucide-react";
 import {useRouter} from 'next/navigation';
 import {
     BarChart,
     Bar,
-    LineChart,
-    Line,
     XAxis,
     YAxis,
     Tooltip,
     CartesianGrid,
     ResponsiveContainer,
+    TooltipProps,
 } from 'recharts';
 
 function getCookie(name: string) {
@@ -32,8 +30,13 @@ export default function ContestsClient({id}: {id: string}) {
         name: `Q${i + 1}`,
         value: Math.floor(Math.random() * 700) + 200,
     }));
+    interface CustomTooltipProps {
+        active?: boolean;
+        payload?: {value: number}[];
+        label?: string;
+    }
     const chartWidth = Math.max(data.length * 60, 800);
-    const CustomTooltip = ({active, payload, label}: any) => {
+    const CustomTooltip = ({active, payload, label}: CustomTooltipProps) => {
         if (active && payload && payload.length) {
             return (
                 <div className="bg-background text-[#c0c0c0] px-4 py-2 rounded-xl font-mono">

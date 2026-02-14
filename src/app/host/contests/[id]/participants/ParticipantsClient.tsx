@@ -12,7 +12,9 @@ import {
   PointerSensor, 
   TouchSensor, 
   useSensor, 
-  useSensors
+  useSensors,
+  DragEndEvent,
+  UniqueIdentifier
 } from "@dnd-kit/core"
 import {
   SortableContext,
@@ -48,6 +50,11 @@ export default function ParticipantsClient({id}: {id: string}) {
         id: string
         key: string
         direction: "asc" | "desc"
+    }
+    type SortableItemProps = {
+        rule: SortRule;
+        toggleDirection: (id: string) => void;
+        removeRule: (id: string) => void;
     }
 
     const [sortRules, setSortRules] = useState<SortRule[]>([
@@ -111,7 +118,7 @@ export default function ParticipantsClient({id}: {id: string}) {
         setShowMetricDropdown(false);
     }
 
-    function handleDragEnd(event: any) {
+    function handleDragEnd(event: DragEndEvent) {
         const {active, over} = event
 
         if (over && active.id !== over.id) {
@@ -140,7 +147,7 @@ export default function ParticipantsClient({id}: {id: string}) {
         setSortRules([]);
     }
 
-    function SortableItem({rule, toggleDirection, removeRule}: any) {
+    function SortableItem({rule, toggleDirection, removeRule}: SortableItemProps) {
         const {
             attributes,
             listeners,
