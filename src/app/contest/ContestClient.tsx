@@ -350,7 +350,7 @@ export default function ContestClient() {
           <MathJaxContext>
             <form className='flex flex-col gap-4 w-full font-mono text-xl space-y-8'>
               {questions.map((q, i) => (
-                <div key={i} className='flex flex-col gap-4 text-text_secondary'>
+                <div key={i} className='flex flex-col gap-4 text-text_secondary transition-all duration-700'>
                   <div className='overflow-x-auto overflow-y-hidden'>
                     <div className="inline-block min-w-full">
                       <p className='mb-2 tracking-[-.01em]'>
