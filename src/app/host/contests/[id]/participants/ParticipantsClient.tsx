@@ -148,8 +148,8 @@ export default function ParticipantsClient({id}: {id: string}) {
 
         return (
             <div ref={setNodeRef} style={style} className={`${isDragging ? "z-10 border-black" : "border-[#c0c0c0]"} border-2 flex items-center justify-between px-2 py-1 rounded-lg bg-[#c0c0c0] text-sm gap-1`} {...attributes}>
-                <div className="flex items-center gap-2">
-                    <GripHorizontal {...listeners} className="h-4 w-4 cursor-grab"/>
+                <div className="flex items-center gap-2" onPointerDown={() => setShowMetricDropdown(false)}>
+                    <GripHorizontal {...listeners} className="h-4 w-4 cursor-grab" style={{touchAction: 'none'}}/>
                     <span>{rule.key}</span>
                 </div>
                 <div className='flex gap-1'>
@@ -200,9 +200,9 @@ export default function ParticipantsClient({id}: {id: string}) {
                 </div>
                 <div className="w-full rounded-xl p-6 bg-[#c0c0c0] text-background">
                     <div className="flex flex-col sm:flex-row items-center sm:justify-between sm:items-center items-start sm:gap-5">
-                        <h2 className="text-base font-medium mb-2">Participants</h2>
+                        <h2 className="text-base font-medium sm:mb-1 mb-2">Participants</h2>
                         <div className="flex items-center gap-3 w-full sm:w-auto">
-                            <div className="sm:mb-2 mb-1 relative w-full sm:max-w-sm">
+                            <div className="mb-1 relative w-full sm:max-w-sm">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#707070]"/>
 
                                 <input
@@ -216,7 +216,7 @@ export default function ParticipantsClient({id}: {id: string}) {
                                     className="sm:block hidden w-full pl-10 pr-4 py-2 rounded-lg border-2 border-[#b1b1b1] bg-[#b1b1b1] text-sm focus:outline-none focus:ring-2 focus:ring-[#b1b1b1] focus:ring focus:ring-offset-2 focus:ring-offset-[#c0c0c0] hover:bg-[#c0c0c0] transition duration-300"
                                 />
                             </div>
-                            <div className="sm:mb-2 mb-1 relative" ref={dropdownRef}>
+                            <div className="mb-1 relative" ref={dropdownRef}>
                                 <button
                                     onClick={() => setOpen(!open)}
                                     className="flex items-center gap-2 px-3 py-2 rounded-lg border-2 border-[#b1b1b1] bg-[#b1b1b1] sm:text-sm text-xs hover:bg-[#c0c0c0] cursor-pointer transition duration-300"
@@ -236,7 +236,7 @@ export default function ParticipantsClient({id}: {id: string}) {
 
                                         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} modifiers={[restrictToVerticalAxis, restrictToParentElement]}>
                                             <SortableContext items={sortRules.map(rule => rule.id)} strategy={verticalListSortingStrategy}>
-                                                <div className="flex flex-col gap-1" style={{touchAction: 'none'}}>
+                                                <div className="flex flex-col gap-1">
                                                 {sortRules.map(rule => (
                                                     <SortableItem
                                                         key={rule.id}
@@ -262,7 +262,7 @@ export default function ParticipantsClient({id}: {id: string}) {
                                                         animate={{opacity: 1, y: 0, scale: 1}}
                                                         exit={{opacity: 0, y: -8, scale: 0.95}}
                                                         transition={{duration: 0.18}}
-                                                        className="absolute mt-1 w-55 bg-[#c0c0c0] border-2 border-background rounded-lg shadow-lg z-50 origin-top"
+                                                        className="absolute mt-1 w-55 bg-[#b1b1b1] border-2 border-background rounded-lg shadow-lg z-50 origin-top"
                                                     >
                                                         {unusedMetrics.length === 0 ? (
                                                             <div className="px-3 py-2 text-sm text-[#707070]">
@@ -272,7 +272,7 @@ export default function ParticipantsClient({id}: {id: string}) {
                                                             unusedMetrics.map(metric => (
                                                                 <div
                                                                     key={metric.id}
-                                                                    className="px-3 py-2 text-sm hover:bg-[#d4d4d4] cursor-pointer rounded-lg"
+                                                                    className="px-3 py-2 text-sm hover:bg-[#c0c0c0] cursor-pointer rounded-lg"
                                                                     onClick={() => addMetric(metric)}
                                                                 >
                                                                     {metric.key}

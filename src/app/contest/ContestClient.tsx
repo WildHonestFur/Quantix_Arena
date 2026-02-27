@@ -5,6 +5,10 @@ import {useState, useEffect, useTransition, useCallback, useRef} from 'react';
 import {getContestData, submit, strike, leave} from '@funcs/actions';
 import {useRouter} from 'next/navigation';
 import {MathJax, MathJaxContext} from 'better-react-mathjax';
+import {Settings} from "lucide-react";
+import {themeColors} from "@lib/theme";
+import {useTheme} from '@lib/themeProvider';
+import {motion, AnimatePresence} from "framer-motion"
 
 type QuestionType = {
   type: 'mcq' | 'fill';
@@ -39,6 +43,45 @@ export default function ContestClient() {
   const [questions, setQuestions] = useState<QuestionType[]>([]);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [timeUp, setTimeUp] = useState(false);
+  const {currentTheme, isMounted, toggleTheme} = useTheme();
+  const themeRef = useRef(currentTheme);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const paletteRef = useRef<HTMLDivElement>(null);
+
+  const togglePalette = () => {
+    setPaletteOpen(!paletteOpen);
+  };
+
+  const handleThemeChange = (preference: string) => {
+    const nextTheme = preference.replace(/\s+/g, '');
+    toggleTheme(nextTheme);
+  };
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (paletteRef.current && !paletteRef.current.contains(event.target as Node)) {
+        setPaletteOpen(false);
+      }
+    }
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [])
+
+  useEffect(() => {
+    if (isMounted) {
+      const root = window.document.documentElement;
+      const themeNames = Object.keys(themeColors);
+      root.classList.remove(...themeNames);
+      root.classList.add(currentTheme.name.replace(/\s+/g, ''));
+      themeRef.current = currentTheme;
+    }
+  }, [currentTheme, isMounted]);
+
+  useEffect(() => {
+    if (isMounted) {
+      themeRef.current = currentTheme;
+    }
+  }, [isMounted]);
 
   useEffect(() => {
     fetchContestData();
@@ -59,7 +102,6 @@ export default function ContestClient() {
 
     setLoading('submit');
     const res = await submit(cid, pid, answersRef.current);
-
 
     if (!res.success) {
       setMessage(res.message);
@@ -243,109 +285,145 @@ export default function ContestClient() {
     setAnswers(prev => ({...prev, [questionId]: prev[questionId] === value ? '' : value}));
   }
 
+  if (!isMounted) {
+    return null;
+  }
+
   return (
-    <div className='flex flex-col items-center min-h-screen p-8 pb-20 gap-16 sm:p-20'>
-      <main className='flex flex-col gap-[32px] row-start-2 items-center sm:items-start w-full max-w-5xl'>
-        <Image
-          src='/Quantix Arena.png'
-          alt='Quantix Arena logo'
-          width={600}
-          height={67}
-          priority
-        />
-        <div className='font-mono text-2xl'>
-            {name}
+    <>
+      <div ref={paletteRef}>
+        <div onClick={togglePalette} className="text-text_secondary transition-all duration-300 flex group items-center fixed top-0 right-0 p-8 z-10 cursor-pointer mt-3 mr-3 px-2 py-1 rounded-lg">
+            <Settings className="transition-transform duration-500 ease-in-out w-5 h-5 group-hover:rotate-90 group-hover:scale-110"/>
         </div>
-        <ol className='font-mono list-inside list-decimal text-sm/6 text-center sm:text-left'>
-          <p className='mb-2 tracking-[-.01em]'>
-            Time remaining:
-          </p>
-          <div className='font-mono text-[2.1rem] sm:text-4xl'>
-            <span className='text-[#c0c0c0]'>{String(timeLeft.hours).padStart(2, '0')}</span>
-            <span className='text-[#ffd700]'>h </span>
-            <span className='text-[#c0c0c0]'>{String(timeLeft.minutes).padStart(2, '0')}</span>
-            <span className='text-[#ffd700]'>m </span>
-            <span className='text-[#c0c0c0]'>{String(timeLeft.seconds).padStart(2, '0')}</span>
-            <span className='text-[#ffd700]'>s</span>
-          </div>
-        </ol>
-
-        <MathJaxContext>
-          <form className='flex flex-col gap-4 w-full font-mono text-xl space-y-8'>
-            {questions.map((q, i) => (
-              <div key={i} className='flex flex-col gap-4'>
-                <div className='overflow-x-auto overflow-y-hidden'>
-                  <div className="inline-block min-w-full">
-                    <p className='mb-2 tracking-[-.01em]'>
-                      <MathJax>{`${i + 1}. ${q.question}`}</MathJax>
-                    </p>
-                    
-                    {q.diagram && (
-                      <div className='h-80'>
-                        <img
-                          src={q.diagram}
-                          alt="Diagram"
-                          className="h-full w-auto max-w-full"
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {q.type === 'mcq' && (
-                  <div className='flex flex-col gap-4 w-full font-mono text-xl'>
-                    {q.options.map((option, idx) => (
-                      <label
-                        key={idx}
-                        className='flex items-center gap-3 cursor-pointer select-none'
-                      >
-                        <input
-                          type='checkbox'
-                          name={`q${i}`}
-                          value={option}
-                          className='peer hidden'
-                          disabled={timeUp || loading !== '' || isPending}
-                          checked={answers[q.id] === option}
-                          onChange={() => handleRadioToggle(q.id, option)}
-                        />
-                        <div className='w-4 h-4 rounded-full border-2 border-[#C0C0C0] flex-shrink-0 peer-checked:border-[#FFD700] peer-checked:bg-[#FFD700] transition-colors duration-300'></div>
-                        <span className='text-foreground peer-checked:text-[#FFD700]'>
-                          <MathJax>{option}</MathJax>
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                )}
-
-                {q.type === 'fill' && (
-                  <div className='flex flex-col gap-4 w-full font-mono text-xl'>
-                    <input
-                      type='text'
-                      placeholder='Answer'
-                      value={answers[q.id] || ''}
-                      name={`q${i}`}
-                      disabled={timeUp || loading !== '' || isPending}
-                      onChange={(e) => handleChange(q.id, e.target.value)}
-                      className='transition-all duration-300 ease-in-out rounded-full border border-solid border-transparent transition-colors bg-[#ffd700] text-background placeholder:text-[#444444] flex items-center justify-center gap-2 text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto hover:bg-[#FFC700] focus:bg-[#FFC700] focus:outline-none focus:ring-2 focus:ring-[#FFC700] focus:ring-offset-2 focus:ring-offset-background'
-                    />
-                  </div>
-                )}
-              </div>
-            ))}
+        {paletteOpen && (
+          <motion.div
+              initial={{opacity: 0, y: -6}}
+              animate={{opacity: 1, y: 0, scale: 1}}
+              exit={{opacity: 0, y: -6}}
+              transition={{duration: 0.2}}
+              className="transition-colors duration-700 font-mono text-text_secondary fixed top-13 right-5 z-55 bg-background border-2 border-primary p-4 rounded-xl flex flex-col gap-2.5"
+          >
+          <p className='mb-1'>Theme</p>
+          {Object.values(themeColors).map((theme) => (
             <button
-              type='submit'
-              disabled={loading !== '' || isPending}
-              onClick={handleSubmit}
-              className='transition-all duration-300 ease-in-out rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-[#c0c0c0] text-background gap-2 hover:bg-[#b4b4b4] dark:hover:bg-[#b4b4b4] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+              key={theme.name}
+              onClick={() => handleThemeChange(theme.name)}
+              className="text-sm flex items-center gap-2.5 rounded-md cursor-pointer group"
             >
-              {loading === 'load' ? 'Loading...' : isPending || loading === 'submit' ? 'Submitting...' : 'Submit'}
+              <div className="flex w-15 h-5 rounded-lg overflow-hidden border-2 border-[#555555]">
+                <div style={{backgroundColor: theme.primary}} className="flex-1 border-r-2 border-[#555555]"/>
+                <div style={{backgroundColor: theme.secondary}} className="flex-1"/>
+                <div style={{backgroundColor: theme.background}} className="flex-1 border-l-2 border-[#555555]"/>
+              </div>
+              <span className={`group-hover:scale-105 transition-transform duration-200 capitalize ${theme.name === currentTheme.name ? "font-bold" : ""}`}>{theme.name}</span>
             </button>
-          </form>
-        </MathJaxContext>
-        <div className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-[#ffd700] text-background px-4 py-2 rounded shadow-md transition-opacity duration-500 font-mono ${showMessage ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-          {message}
-        </div>
-      </main>
-    </div>
+          ))}
+          </motion.div>
+        )}
+      </div>
+      <div className='flex flex-col items-center min-h-screen p-8 pb-20 gap-16 sm:p-20'>
+        <main className='flex flex-col gap-[32px] row-start-2 items-center sm:items-start w-full max-w-5xl'>
+          <Image
+            src={currentTheme.logo}
+            alt='Quantix Arena logo'
+            width={600}
+            height={67}
+            priority
+          />
+          <div className='font-mono text-2xl text-text_secondary transition-all duration-700'>
+              {name}
+          </div>
+          <ol className='font-mono list-inside list-decimal text-sm/6 text-center sm:text-left text-text_secondary transition-all duration-700'>
+            <p className='mb-2 tracking-[-.01em]'>
+              Time remaining:
+            </p>
+            <div className='font-mono text-[2.1rem] sm:text-4xl'>
+              <span className='text-secondary'>{String(timeLeft.hours).padStart(2, '0')}</span>
+              <span className='text-primary'>h </span>
+              <span className='text-secondary'>{String(timeLeft.minutes).padStart(2, '0')}</span>
+              <span className='text-primary'>m </span>
+              <span className='text-secondary'>{String(timeLeft.seconds).padStart(2, '0')}</span>
+              <span className='text-primary'>s</span>
+            </div>
+          </ol>
+
+          <MathJaxContext>
+            <form className='flex flex-col gap-4 w-full font-mono text-xl space-y-8'>
+              {questions.map((q, i) => (
+                <div key={i} className='flex flex-col gap-4 text-text_secondary'>
+                  <div className='overflow-x-auto overflow-y-hidden'>
+                    <div className="inline-block min-w-full">
+                      <p className='mb-2 tracking-[-.01em]'>
+                        <MathJax>{`${i + 1}. ${q.question}`}</MathJax>
+                      </p>
+                      
+                      {q.diagram && (
+                        <div className='h-80'>
+                          <img
+                            src={q.diagram}
+                            alt="Diagram"
+                            className="h-full w-auto max-w-full"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {q.type === 'mcq' && (
+                    <div className='flex flex-col gap-4 w-full font-mono text-xl transition-all duration-700'>
+                      {q.options.map((option, idx) => (
+                        <label
+                          key={idx}
+                          className='flex items-center gap-3 cursor-pointer select-none'
+                        >
+                          <input
+                            type='checkbox'
+                            name={`q${i}`}
+                            value={option}
+                            className='peer hidden transition-all duration-700'
+                            disabled={timeUp || loading !== '' || isPending}
+                            checked={answers[q.id] === option}
+                            onChange={() => handleRadioToggle(q.id, option)}
+                          />
+                          <div className='w-4 h-4 rounded-full border-2 border-secondary flex-shrink-0 peer-checked:border-primary peer-checked:bg-primary transition-colors duration-300'></div>
+                          <span className='text-text_secondary peer-checked:text-primary'>
+                            <MathJax>{option}</MathJax>
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+
+                  {q.type === 'fill' && (
+                    <div className='flex flex-col gap-4 w-full font-mono text-xl'>
+                      <input
+                        type='text'
+                        placeholder='Answer'
+                        value={answers[q.id] || ''}
+                        name={`q${i}`}
+                        disabled={timeUp || loading !== '' || isPending}
+                        onChange={(e) => handleChange(q.id, e.target.value)}
+                        className='transition-all duration-300 ease-in-out rounded-full border border-solid border-transparent transition-colors bg-primary text-text_main placeholder:text-text_placeholder flex items-center justify-center gap-2 text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto hover:bg-primary_dark focus:bg-primary_dark focus:outline-none focus:ring-2 focus:ring-primary_dark focus:ring-offset-2 focus:ring-offset-background'
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+              <button
+                type='submit'
+                disabled={loading !== '' || isPending}
+                onClick={handleSubmit}
+                className='transition-all duration-300 ease-in-out rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-secondary text-text_main gap-2 hover:bg-secondary_dark dark:hover:bg-secondary_dark font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+              >
+                {loading === 'load' ? 'Loading...' : isPending || loading === 'submit' ? 'Submitting...' : 'Submit'}
+              </button>
+            </form>
+          </MathJaxContext>
+          <div className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-primary text-text_main px-4 py-2 rounded shadow-md transition-opacity duration-500 font-mono ${showMessage ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            {message}
+          </div>
+        </main>
+      </div>
+    </>
   );
 }
