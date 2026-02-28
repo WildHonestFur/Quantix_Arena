@@ -279,7 +279,7 @@ export default function WaitingClient() {
   return (
     <>
       <div ref={paletteRef}>
-        <div onClick={togglePalette} className="text-text_secondary transition-all duration-300 flex group items-center fixed top-0 right-0 p-8 z-10 cursor-pointer mt-3 mr-3 px-2 py-1 rounded-lg">
+        <div onClick={togglePalette} className="text-text_secondary transition-all duration-300 flex group items-center absolute top-0 right-0 p-8 z-10 cursor-pointer mt-3 mr-3 px-2 py-1 rounded-lg">
             <Settings className="transition-transform duration-500 ease-in-out w-5 h-5 group-hover:rotate-90 group-hover:scale-110"/>
         </div>
         {paletteOpen && (
@@ -288,7 +288,7 @@ export default function WaitingClient() {
               animate={{opacity: 1, y: 0, scale: 1}}
               exit={{opacity: 0, y: -6}}
               transition={{duration: 0.2}}
-              className="transition-colors duration-700 font-mono text-text_secondary fixed top-13 right-5 z-55 bg-background border-2 border-primary p-4 rounded-xl flex flex-col gap-2.5"
+              className="transition-colors duration-700 font-mono text-text_secondary absolute top-13 right-5 z-55 bg-background border-2 border-primary p-4 rounded-xl flex flex-col gap-2.5"
           >
           <p className='mb-1'>Theme</p>
           {Object.values(themeColors).map((theme) => (
