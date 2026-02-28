@@ -363,7 +363,11 @@ export default function ContestClient() {
                           <ReactSVG
                             src={q.diagram}
                             beforeInjection={(svg) => {
-                              svg.setAttribute('class', 'h-full w-auto max-w-full text-primary fill-primary');
+                              svg.removeAttribute('width');
+                              svg.removeAttribute('height');
+                              svg.setAttribute('class', 'h-uato max-h-full w-auto max-w-full text-primary fill-primary');
+                              svg.style.maxHeight = '100%';
+                              svg.style.width = 'auto';
                               const paths = svg.querySelectorAll('path, circle, rect, ellipse, polyline, polygon');
                               paths.forEach((path) => {
                                 if (path.getAttribute('fill') !== 'none') {
