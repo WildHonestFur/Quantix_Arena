@@ -9,6 +9,7 @@ import {Settings} from "lucide-react";
 import {themeColors} from "@lib/theme";
 import {useTheme} from '@lib/themeProvider';
 import {motion, AnimatePresence} from "framer-motion"
+import {ReactSVG} from 'react-svg';
 
 type QuestionType = {
   type: 'mcq' | 'fill';
@@ -358,11 +359,21 @@ export default function ContestClient() {
                       </p>
                       
                       {q.diagram && (
-                        <div className='h-80'>
-                          <img
+                        <div className='max-h-80'>
+                          <ReactSVG
                             src={q.diagram}
-                            alt="Diagram"
-                            className="h-full w-auto max-w-full"
+                            beforeInjection={(svg) => {
+                              svg.setAttribute('class', 'h-full w-auto max-w-full text-primary fill-primary');
+                              const paths = svg.querySelectorAll('path, circle, rect, ellipse, polyline, polygon');
+                              paths.forEach((path) => {
+                                if (path.getAttribute('fill') !== 'none') {
+                                  path.setAttribute('fill', 'currentColor');
+                                }
+                                if (path.getAttribute('stroke') && path.getAttribute('stroke') !== 'none') {
+                                  path.setAttribute('stroke', 'currentColor');
+                                }
+                              });
+                            }}
                           />
                         </div>
                       )}
