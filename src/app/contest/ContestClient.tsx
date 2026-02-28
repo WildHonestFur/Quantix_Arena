@@ -365,7 +365,7 @@ export default function ContestClient() {
                             beforeInjection={(svg) => {
                               svg.removeAttribute('width');
                               svg.removeAttribute('height');
-                              svg.setAttribute('class', 'h-uato max-h-full w-auto max-w-full text-primary fill-primary');
+                              svg.setAttribute('class', 'h-auto max-h-80 w-auto max-w-full text-primary fill-primary');
                               svg.style.maxHeight = '100%';
                               svg.style.width = 'auto';
                               const paths = svg.querySelectorAll('path, circle, rect, ellipse, polyline, polygon');
