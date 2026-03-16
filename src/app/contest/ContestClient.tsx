@@ -298,29 +298,29 @@ export default function ContestClient() {
         </div>
         {paletteOpen && (
           <motion.div
-              initial={{opacity: 0, y: -6}}
-              animate={{opacity: 1, y: 0, scale: 1}}
-              exit={{opacity: 0, y: -6}}
-              transition={{duration: 0.2}}
-              className="transition-colors duration-700 font-mono text-text_secondary absolute top-13 right-5 z-55 bg-background border-2 border-primary p-4 rounded-xl flex flex-col gap-2.5"
+            initial={{opacity: 0, y: -6}}
+            animate={{opacity: 1, y: 0, scale: 1}}
+            exit={{opacity: 0, y: -6}}
+            transition={{duration: 0.2}}
+            className="transition-colors duration-700 font-mono text-text_secondary absolute top-13 right-5 z-55 bg-background border-2 border-primary p-4 rounded-xl flex flex-col gap-2.5"
+        >
+        <p className='mb-1'>Theme</p>
+        {Object.values(themeColors).map((theme) => (
+          <button
+            key={theme.name}
+            onClick={() => handleThemeChange(theme.name)}
+            className="text-sm flex items-center gap-2.5 rounded-md cursor-pointer group"
           >
-          <p className='mb-1'>Theme</p>
-          {Object.values(themeColors).map((theme) => (
-            <button
-              key={theme.name}
-              onClick={() => handleThemeChange(theme.name)}
-              className="text-sm flex items-center gap-2.5 rounded-md cursor-pointer group"
-            >
-              <div className="flex w-15 h-5 rounded-lg overflow-hidden border-2 border-[#555555]">
-                <div style={{backgroundColor: theme.primary}} className="flex-1 border-r-2 border-[#555555]"/>
-                <div style={{backgroundColor: theme.secondary}} className="flex-1"/>
-                <div style={{backgroundColor: theme.background}} className="flex-1 border-l-2 border-[#555555]"/>
-              </div>
-              <span className={`group-hover:scale-105 transition-transform duration-200 capitalize ${theme.name === currentTheme.name ? "font-bold" : ""}`}>{theme.name}</span>
-            </button>
-          ))}
-          </motion.div>
-        )}
+            <div className="flex w-15 h-5 rounded-lg overflow-hidden border-2 border-[#555555]">
+              <div style={{backgroundColor: theme.primary}} className="flex-1 border-r-2 border-[#555555]"/>
+              <div style={{backgroundColor: theme.secondary}} className="flex-1"/>
+              <div style={{backgroundColor: theme.background}} className="flex-1 border-l-2 border-[#555555]"/>
+            </div>
+            <span className={`group-hover:scale-105 transition-transform duration-200 capitalize ${theme.name === currentTheme.name ? "font-bold" : ""}`}>{theme.name}</span>
+          </button>
+        ))}
+        </motion.div>
+      )}
       </div>
       <div className='flex flex-col items-center min-h-screen p-8 pb-20 gap-16 sm:p-20'>
         <main className='flex flex-col gap-[32px] row-start-2 items-center sm:items-start w-full max-w-5xl'>
