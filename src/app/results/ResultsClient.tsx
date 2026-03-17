@@ -326,7 +326,7 @@ export default function Results() {
                 <div className='flex flex-col gap-2'>
                   <div className='overflow-x-auto overflow-y-hidden'>
                     <div className="inline-block min-w-full">
-                      <p className='mb-2 tracking-[-.01em]'>
+                      <p className='mb-2 tracking-[-.01em] text-text_secondary transition-all duration-700'>
                         Key:
                       </p>
                     </div>
