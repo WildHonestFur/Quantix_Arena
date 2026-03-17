@@ -297,7 +297,7 @@ export default function Results() {
                 height={67}
                 priority
               />
-              <div className='font-mono text-2xl'>
+              <div className='font-mono text-2xl text-text_secondary transition-all duration-700'>
                   {name}
               </div>
 
@@ -366,7 +366,7 @@ export default function Results() {
               </form>
       
               <MathJaxContext>
-                <form className='flex flex-col gap-4 w-full font-mono text-xl space-y-8'>
+                <form className='flex flex-col gap-4 w-full font-mono text-text_secondary transition-all duration-700 text-xl space-y-8'>
                   {questions.map((q, i) => (
                     <div key={i} className='flex flex-col gap-4'>
                       <div className='overflow-x-auto overflow-y-hidden'>
