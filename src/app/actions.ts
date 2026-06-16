@@ -45,11 +45,11 @@ function getPasswordHash(password: string) {
 export async function validateCompetition(unprocessed_code: string) {
   const code = unprocessed_code.trim().toLowerCase();
 
-  const {data, error} = await supabase
-    .from('competitions')
-    .select('id, start_datetime, end_datetime, released_scores')
-    .eq('code', code)
-    .maybeSingle();
+  const {data, error} = await supabase.rpc('validate_competition', {
+    check_code: code
+  })
+  .select('id, end_datetime, released_scores')
+  .maybeSingle();
 
   if (error) {
     return {valid: false, message: 'Server error'};
@@ -187,12 +187,13 @@ export async function createParticipant(competitionId: number, values: Record<st
 
 export async function getStartTime(competitionId: number) {
   const {data, error} = await supabase
-    .from('competitions')
+    .rpc('get_start_time', {
+      check_id: competitionId
+    })
     .select('start_datetime, name')
-    .eq('id', competitionId)
-    .single();
+    .maybeSingle();
 
-  if (error) {
+  if (error || !data) {
     return {success: false, message: 'Server error'};
   }
 
@@ -201,12 +202,13 @@ export async function getStartTime(competitionId: number) {
 
 export async function getContestData(competitionId: number) {
   const {data, error} = await supabase
-    .from('competitions')
+    .rpc('validate_competition', {
+      check_id: competitionId
+    })
     .select('end_datetime, name')
-    .eq('id', competitionId)
-    .single();
+    .maybeSingle();
 
-  if (error) {
+  if (error || !data) {
     return {success: false, message: 'Server error'};
   }
 
@@ -249,13 +251,13 @@ export async function getContestData(competitionId: number) {
 
 export async function submit(competitionId: number, participantId: number, values: Record<number, string>) {
   const {data, error} = await supabase
-    .from('participants')
+    .rpc('validate_participant', {
+      check_id: participantId
+    })
     .select('submitted')
-    .eq('competition_id', competitionId)
-    .eq('id', participantId)
-    .single();
+    .maybeSingle();
 
-  if (error) {
+  if (error || !data) {
     return {success: false, message: 'Server error'};
   }
 
@@ -281,7 +283,6 @@ export async function submit(competitionId: number, participantId: number, value
     .from('participants')
     .update({submitted: true})
     .eq('id', participantId)
-    .eq('competition_id', competitionId);
 
   if (updateError) {
     return {success: false, message: 'Server error'};
@@ -348,6 +349,19 @@ export async function leave(participantId: number) {
     .from('participants')
     .update({last_attempt: now})
     .eq('id', participantId)
+
+  if (error) {
+    return {success: false, message: 'Server error'};
+  }
+
+  return {success: true, message: ''};
+}
+
+export async function setTestingWindow(participantId: number) {
+  const {error} = await supabase
+    .rpc('set_testing_window', {
+      check_id: participantId
+    })
 
   if (error) {
     return {success: false, message: 'Server error'};

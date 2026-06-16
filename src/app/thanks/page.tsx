@@ -16,11 +16,11 @@ async function checkCompetitionId(competition_id: number | null) {
     return {valid: false, over: false, results_out: false, started: false, id: 0};
   }
 
-  const {data, error} = await supabase
-    .from('competitions')
-    .select('id, end_datetime, start_datetime, released_scores')
-    .eq('id', competition_id)
-    .maybeSingle();
+  const {data, error} = await supabase.rpc('validate_competition', {
+    check_id: competition_id
+  })
+  .select('id, end_datetime, start_datetime, released_scores')
+  .maybeSingle();
 
   if (error || !data) {
     return {valid: false, over: false, results_out: false, started: false, id: 0};
@@ -36,9 +36,10 @@ async function checkParticipantId(cid: CompetitionStatus, participant_id: number
   }
 
   const {data, error} = await supabase
-    .from('participants')
+    .rpc('validate_participant', {
+      check_id: participant_id
+    })
     .select('competition_id, submitted')
-    .eq('id', participant_id)
     .maybeSingle();
 
   if (error || !data || data.competition_id != cid.id) {

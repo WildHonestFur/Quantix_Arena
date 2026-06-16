@@ -9,9 +9,10 @@ async function checkCompetitionId(competition_id: number | null) {
   }
 
   const {data, error} = await supabase
-    .from('competitions')
+    .rpc('validate_competition', {
+      check_id: competition_id
+    })
     .select('id, end_datetime, start_datetime, released_scores')
-    .eq('id', competition_id)
     .maybeSingle();
 
   if (error || !data) {

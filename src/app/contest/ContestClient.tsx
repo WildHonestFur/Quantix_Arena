@@ -2,14 +2,15 @@
 
 import Image from 'next/image';
 import {useState, useEffect, useTransition, useCallback, useRef} from 'react';
-import {getContestData, submit, strike, leave} from '@funcs/actions';
+import {getContestData, submit, strike, leave, setTestingWindow} from '@funcs/actions';
 import {useRouter} from 'next/navigation';
 import {MathJax, MathJaxContext} from 'better-react-mathjax';
-import {Settings} from "lucide-react";
+import {Settings, Move, X, Calculator} from "lucide-react";
 import {themeColors} from "@lib/theme";
 import {useTheme} from '@lib/themeProvider';
-import {motion, AnimatePresence} from "framer-motion"
+import {motion, AnimatePresence, useDragControls} from "framer-motion"
 import {ReactSVG} from 'react-svg';
+import Script from 'next/script';
 
 type QuestionType = {
   type: 'mcq' | 'fill';
@@ -48,6 +49,14 @@ export default function ContestClient() {
   const themeRef = useRef(currentTheme);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const paletteRef = useRef<HTMLDivElement>(null);
+
+  const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [calcOpen, setCalcOpen] = useState(false);
+  const calculatorRef = useRef<HTMLDivElement | null>(null);
+  const desmosInstance = useRef<Desmos.BasicCalculator | null>(null);
+  const constraintsRef = useRef<HTMLDivElement | null>(null);
+  const dragControls = useDragControls();
+  const [calcZoom, setCalcZoom] = useState(1);
 
   const togglePalette = () => {
     setPaletteOpen(!paletteOpen);
@@ -92,6 +101,20 @@ export default function ContestClient() {
     if (saved) {
       setAnswers(JSON.parse(saved));
     }
+  }, []);
+
+  const handleTestingWindow = useCallback(async () => {
+    const pid = parseInt(getCookie('participantId') || '0', 10);
+    const res = await setTestingWindow(pid);
+    if (!res.success) {
+      setMessage(res.message);
+      setShowMessage(true);
+      setTimeout(() => setShowMessage(false), 3000);
+    }
+  }, []);
+
+  useEffect(() => {
+    handleTestingWindow();
   }, []);
 
   const answersRef = useRef(answers);
@@ -286,12 +309,49 @@ export default function ContestClient() {
     setAnswers(prev => ({...prev, [questionId]: prev[questionId] === value ? '' : value}));
   }
 
+  useEffect(() => {
+    if (scriptLoaded && calculatorRef.current && typeof Desmos !== 'undefined' && !desmosInstance.current) {
+      const calc = Desmos.ScientificCalculator(calculatorRef.current, {
+        settingsMenu: false,
+      });
+      calc.updateSettings({ fontSize: 15 });
+      desmosInstance.current = calc;
+    }
+  }, [scriptLoaded]);
+
+  useEffect(() => {
+    const updateZoom = () => {
+      if (window.innerWidth < 450) {
+        setCalcZoom(0.60);
+      }
+      else if (window.innerWidth < 640) {
+        setCalcZoom(0.75);
+      }
+      else if (window.innerWidth < 768) {
+        setCalcZoom(0.85);
+      }
+      else {
+        setCalcZoom(1);
+      }
+      setCalcOpen(false);
+    };
+    updateZoom();
+    window.addEventListener('resize', updateZoom);
+    return () => window.removeEventListener('resize', updateZoom);
+  }, []);
+
   if (!isMounted) {
     return null;
   }
 
   return (
     <>
+      <Script
+        src={`https://www.desmos.com/api/v1.11/calculator.js?apiKey=${process.env.NEXT_PUBLIC_DESMOS_API_KEY}`}
+        strategy="afterInteractive"
+        onLoad={() => setScriptLoaded(true)}
+      />
+      <div ref={constraintsRef} className="fixed inset-0 pointer-events-none z-40"/>
       <div ref={paletteRef}>
         <div onClick={togglePalette} className="text-text_secondary transition-all duration-300 flex group items-center absolute top-0 right-0 p-8 z-10 cursor-pointer mt-3 mr-3 px-2 py-1 rounded-lg">
             <Settings className="transition-transform duration-500 ease-in-out w-5 h-5 group-hover:rotate-90 group-hover:scale-110"/>
@@ -435,7 +495,57 @@ export default function ContestClient() {
           <div className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-primary text-text_main px-4 py-2 rounded shadow-md transition-opacity duration-500 font-mono ${showMessage ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
             {message}
           </div>
+          <motion.div
+            drag
+            dragControls={dragControls}
+            dragListener={false} 
+            dragConstraints={constraintsRef}
+            dragMomentum={false}
+            dragElastic={0}
+            initial={false}
+            animate={{ 
+              opacity: calcOpen ? 1 : 0,
+              scale: calcOpen ? 1 : 0.8,
+              pointerEvents: calcOpen ? 'auto' : 'none'
+            }}
+            transition={{duration: 0.2}}
+            style={{visibility: calcOpen ? 'visible' : 'hidden'}}
+            className="fixed bottom-10 right-10 z-50"
+          >
+            <div className="transition-all duration-700 border-2 border-primary rounded-xl overflow-hidden shadow-xl bg-background flex flex-col origin-bottom-right" style={{zoom: calcZoom}}>
+              <div 
+                onPointerDown={(e) => dragControls.start(e)} 
+                className="bg-background border-b border-primary/20 px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2.5 flex items-center justify-between cursor-grab active:cursor-grabbing select-none"
+              >
+                <div className="flex items-center gap-3 text-text_secondary text-sm font-mono">
+                  <Move className="w-4 h-4 text-primary"/>
+                  <span>Calculator</span>
+                </div>
+                <button 
+                  onClick={() => setCalcOpen(false)}
+                  className="text-text_secondary hover:text-primary transition-colors p-0.5 sm:p-1 rounded-md hover:bg-primary/20 hover:cursor-pointer"
+                >
+                  <X className="w-4 h-4"/>
+                </button>
+              </div>
+
+              <div className="w-full bg-white">
+                <div
+                  ref={calculatorRef} 
+                  style={{width: '100%', height: '400px'}} 
+                />
+              </div>
+            </div>
+          </motion.div>
         </main>
+        {!calcOpen && (
+          <button 
+            onClick={() => setCalcOpen(true)}
+            className="fixed sm:bottom-10 sm:right-10 bottom-7 right-7 bg-primary font-bold px-2 py-2 rounded-lg shadow hover:bg-primary_dark transition-all duration-500 cursor-pointer"
+          >
+            <Calculator className="sm:w-8 sm:h-8 w-6 h-6 text-text_main transition-all duration-500"/>
+          </button>
+        )}
       </div>
     </>
   );
