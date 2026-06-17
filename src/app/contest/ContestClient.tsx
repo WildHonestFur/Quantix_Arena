@@ -515,7 +515,7 @@ export default function ContestClient() {
             <div className="transition-all duration-700 border-2 border-primary rounded-xl overflow-hidden shadow-xl bg-background flex flex-col origin-bottom-right" style={{zoom: calcZoom}}>
               <div 
                 onPointerDown={(e) => dragControls.start(e)} 
-                className="bg-background border-b border-primary/20 px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2.5 flex items-center justify-between cursor-grab active:cursor-grabbing select-none"
+                className="touch-none bg-background border-b border-primary/20 px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2.5 flex items-center justify-between cursor-grab active:cursor-grabbing select-none"
               >
                 <div className="flex items-center gap-3 text-text_secondary text-sm font-mono">
                   <Move className="w-4 h-4 text-primary"/>
@@ -541,7 +541,7 @@ export default function ContestClient() {
         {!calcOpen && (
           <button 
             onClick={() => setCalcOpen(true)}
-            className="fixed sm:bottom-10 sm:right-10 bottom-7 right-7 bg-primary font-bold px-2 py-2 rounded-lg shadow hover:bg-primary_dark transition-all duration-500 cursor-pointer"
+            className="fixed shadow-xl sm:bottom-10 sm:right-10 bottom-7 right-7 bg-primary font-bold px-2 py-2 rounded-lg shadow hover:bg-primary_dark transition-all duration-500 cursor-pointer"
           >
             <Calculator className="sm:w-8 sm:h-8 w-6 h-6 text-text_main transition-all duration-500"/>
           </button>
