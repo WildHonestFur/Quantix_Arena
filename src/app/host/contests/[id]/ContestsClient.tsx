@@ -6,9 +6,11 @@ import Image from 'next/image';
 import {Users, FileText, Calendar, Hourglass, Clock8, Clock10, Clock12, ChartColumn, Pencil} from "lucide-react";
 import {useRouter} from 'next/navigation';
 import {themeColors} from "@lib/theme";
+import {findParticularContest, getTestingWindows} from '@funcs/actions';
 import {useTheme} from '@lib/themeProvider';
 import {Settings} from "lucide-react";
 import {motion, AnimatePresence} from "framer-motion"
+import {ContestCard} from '../../contestCard';
 
 function getCookie(name: string) {
   const value = `; ${document.cookie}`;
@@ -19,6 +21,20 @@ function getCookie(name: string) {
   return undefined;
 }
 
+type Contest = {
+  competition_id: number;
+  name: string;
+  start_datetime: string;
+  end_datetime: string;
+  participants_count: number | string;
+  submissions: number | string;
+}
+
+type TestingWindow = {
+    start_datetime: string;
+    end_datetime: string;
+}
+
 export default function ContestsClient({id}: {id: string}) {
     const router = useRouter();
     const {currentTheme, isMounted, toggleTheme} = useTheme();
@@ -26,6 +42,32 @@ export default function ContestsClient({id}: {id: string}) {
     const transitionRef = useRef({factor: 1, prevTheme: currentTheme});
     const [paletteOpen, setPaletteOpen] = useState(false);
     const paletteRef = useRef<HTMLDivElement>(null);
+    const contest_id = parseInt(id || '0', 10);
+    const [loading, setLoading] = useState('loading');
+    const [showMessage, setShowMessage] = useState(false);
+    const [message, setMessage] = useState('');
+    const loadingContest: Contest = {
+        competition_id: 0,
+        name: 'Loading...',
+        start_datetime: '',
+        end_datetime: '',
+        participants_count: 'Loading...',
+        submissions: 'Loading...'
+    }
+    const [contest, setContest] = useState<Contest>(loadingContest);
+    const [testingWindows, setTestingWindows] = useState<TestingWindow[]>([]);
+
+    const handleParticipantsClick = () => {
+        router.push(`/host/contests/${contest_id}/participants`);
+    };
+
+    const handleAnalyticsClick = () => {
+        router.push(`/host/contests/${contest_id}/analytics`);
+    };
+
+    const handleEditClick = () => {
+        router.push(`/host/contests/${contest_id}/edit`);
+    };
 
     const togglePalette = () => {
         setPaletteOpen(!paletteOpen);
@@ -38,9 +80,9 @@ export default function ContestsClient({id}: {id: string}) {
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
-        if (paletteRef.current && !paletteRef.current.contains(event.target as Node)) {
-            setPaletteOpen(false);
-        }
+            if (paletteRef.current && !paletteRef.current.contains(event.target as Node)) {
+                setPaletteOpen(false);
+            }
         }
         document.addEventListener("click", handleClickOutside);
         return () => document.removeEventListener("click", handleClickOutside);
@@ -67,6 +109,73 @@ export default function ContestsClient({id}: {id: string}) {
         transitionRef.current.factor = 1; 
         }
     }, [isMounted]);
+
+    useEffect(() => {
+        fetchContestData();
+        fetchtestingWindows();
+    }, []);
+
+    const fetchContestData = async () => {   
+        setLoading('loading');
+        const res = await findParticularContest(contest_id);
+
+        if (!res.success) {
+            setMessage(res.message);
+            setShowMessage(true);
+            setTimeout(() => setShowMessage(false), 3000);
+            return;
+        }
+
+        setContest(res.data || loadingContest);
+        setLoading('');
+    };
+
+    const fetchtestingWindows = async () => {   
+        setLoading('loading');
+        const res = await getTestingWindows(contest_id);
+
+        if (!res.success) {
+            setMessage(res.message);
+            setShowMessage(true);
+            setTimeout(() => setShowMessage(false), 3000);
+            return;
+        }
+
+        setTestingWindows(res.data || []);
+        setLoading('');
+    };
+
+    const formatStartDate = (startStr: string) => {
+        const options: Intl.DateTimeFormatOptions = {month: 'short', day: 'numeric', year: 'numeric'};
+        const start = new Date(startStr).toLocaleDateString('en-US', options);
+        return start;
+    };
+
+    const formatStartTime = (startStr: string) => {
+        const options: Intl.DateTimeFormatOptions = {hour: 'numeric', minute: '2-digit', hour12: true};
+        const start = new Date(startStr).toLocaleTimeString('en-US', options);
+        return start;
+    };
+
+    const formatDuration = (startStr: string, endStr: string): string => {
+        const start = new Date(startStr);
+        const end = new Date(endStr);
+
+        const diffInMs = end.getTime() - start.getTime();
+
+        if (isNaN(diffInMs) || diffInMs < 0) {
+            return "Invalid duration";
+        }
+
+        const totalMinutes = Math.floor(diffInMs / (1000 * 60));
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+
+        if (hours === 0) {
+            return `${minutes}m`;
+        }
+        return `${hours}h ${minutes}m`;
+    };
 
     if (!isMounted) {
         return null;
@@ -115,94 +224,99 @@ export default function ContestsClient({id}: {id: string}) {
                     />
                 </Link>
                 <main className='font-mono flex flex-col gap-[20px] row-start-2 items-stretch max-w-[90vw]'>
-                    <div className="transition-all duration-300 w-full rounded-xl p-6 bg-primary text-text_main">
-                        <div className="flex items-center justify-between gap-2">
-                            <h2 className="text-xl font-medium">Contest Name</h2>
-
+                    {loading !== 'loading' && (
+                        <ContestCard contest={contest} clickable={false}></ContestCard>
+                    )}
+                    {loading === 'loading' && (
+                        <div className="md:min-w-150 transition-all duration-300 w-full hover:bg-primary_dark rounded-xl p-6 bg-primary text-text_main hover:scale-102 transition">
+                        <div className="flex items-center justify-between gap-5">
+                            <h2 className="text-lg sm:text-xl font-medium">Loading...</h2>
                             <span className="text-sm px-3 py-1 rounded-full bg-background/15">
-                                Completed
+                                Loading...
                             </span>
                         </div>
 
-                        <div className="flex flex-col text-sm sm:flex-row sm:gap-10">
-                            <div className="flex gap-2 mt-4 text-sm">
-                                <Users className="w-4 h-4"/> 128 participants
+                        <div className="flex flex-col text-sm md:flex-row md:gap-10">
+                            <div className="flex gap-2 mt-4 text-sm whitespace-nowrap">
+                                <Users className="w-4 h-4"/> Loading...
                             </div>
-                            <div className="center flex gap-2 mt-4 text-sm">
-                                <FileText className="w-4 h-4"/> 128 submissions
+                            <div className="center flex gap-2 mt-4 text-sm whitespace-nowrap">
+                                <FileText className="w-4 h-4"/> Loading...
                             </div>
-                            <div className="center flex gap-2 mt-4 text-sm">
-                                <Calendar className="w-4 h-4"/> Feb 28, 2026 - Mar 31, 2026
+                            <div className="center flex gap-2 mt-4 text-sm whitespace-nowrap">
+                                <Calendar className="w-4 h-4 shrink-0"/> Loading...
                             </div>
                         </div>
-                    </div>
+                        </div>
+                    )}
                     <div className="w-full flex flex-col lg:flex-row gap-6">
                         <div className="transition-all duration-300 w-full rounded-xl p-6 bg-secondary text-text_main">
-                            <h2 className="text-base font-medium mb-3">Sessions</h2>
-                            <ul className="mt-2 list-disc pl-5 space-y-3 text-sm">
-                                <li className="flex gap-6">
-                                    <div className="center flex gap-2 text-sm">
-                                        <span><Calendar className="w-4 h-4"/></span>
-                                        <span>Feb 28, 2026</span>
-                                    </div>
-                                    <div className="center flex gap-2 text-sm">
-                                        <span><Clock10 className="w-4 h-4"/></span>
-                                        <span>10:00 A.M.</span>
-                                    </div>
-                                    
-                                    <div className="center flex gap-2 text-sm">
-                                        <span><Hourglass className="w-4 h-4"/></span>
-                                        <span>45 min</span>
-                                    </div>
-                                </li>
-                                <li className="flex gap-6">
-                                    <div className="center flex gap-2 text-sm">
-                                        <span><Calendar className="w-4 h-4"/></span>
-                                        <span>Feb 29, 2026</span>
-                                    </div>
-                                    <div className="center flex gap-2 text-sm">
-                                        <span><Clock8 className="w-4 h-4"/></span>
-                                        <span>08:00 A.M.</span>
-                                    </div>
-                                    
-                                    <div className="center flex gap-2 text-sm">
-                                        <span><Hourglass className="w-4 h-4"/></span>
-                                        <span>45 min</span>
-                                    </div>
-                                </li>
-                                <li className="flex gap-6">
-                                    <div className="center flex gap-2 text-sm">
-                                        <span><Calendar className="w-4 h-4"/></span>
-                                        <span>Mar 01, 2026</span>
-                                    </div>
-                                    <div className="center flex gap-2 text-sm">
-                                        <span><Clock12 className="w-4 h-4"/></span>
-                                        <span>12:00 A.M.</span>
-                                    </div>
-                                    
-                                    <div className="center flex gap-2 text-sm">
-                                        <span><Hourglass className="w-4 h-4"/></span>
-                                        <span>45 min</span>
-                                    </div>
-                                </li>
+                            <h2 className="text-base font-medium mb-3">Testing Windows</h2>
+                            <ul className="mt-2 list-disc pl-5 space-y-3 text-xs sm:text-sm">
+                                {testingWindows.map((slot, index) => (
+                                    <li key={index} className="flex gap-6">
+                                        <div className="center flex gap-2">
+                                            <span><Calendar className="w-4 h-4"/></span>
+                                            <span>{formatStartDate(slot.start_datetime)}</span>
+                                        </div>
+                                        <div className="center flex gap-2">
+                                            <span><Clock10 className="w-4 h-4"/></span>
+                                            <span>{formatStartTime(slot.start_datetime)}</span>
+                                        </div>
+                                        
+                                        <div className="center flex gap-2">
+                                            <span><Hourglass className="w-4 h-4"/></span>
+                                            <span>{formatDuration(slot.start_datetime, slot.end_datetime)}</span>
+                                        </div>
+                                    </li>
+                                ))}
+                                {loading === 'loading' && (
+                                    <li className="flex gap-6">
+                                        <div className="center flex gap-2">
+                                            <span><Calendar className="w-4 h-4"/></span>
+                                            <span>Loading...</span>
+                                        </div>
+                                        <div className="center flex gap-2">
+                                            <span><Clock10 className="w-4 h-4"/></span>
+                                            <span>Loading...</span>
+                                        </div>
+                                        
+                                        <div className="center flex gap-2">
+                                            <span><Hourglass className="w-4 h-4"/></span>
+                                            <span>Loading...</span>
+                                        </div>
+                                    </li>
+                                )}
                             </ul>
                         </div>
                         <div className="flex flex-col gap-3">
-                            <button className="cursor-pointer items-center h-full whitespace-nowrap center flex gap-2 bg-background text-primary border-2 border-primary py-2 px-4 rounded-xl text-sm hover:bg-primary hover:text-text_main transition duration-500">
+                            <button 
+                                onClick={handleParticipantsClick}
+                                className="cursor-pointer items-center h-full whitespace-nowrap center flex gap-2 bg-background text-primary border-2 border-primary py-2 px-4 rounded-xl text-sm hover:bg-primary hover:text-text_main transition duration-500"
+                            >
                                 <span><Users className="w-4 h-4"/></span>
                                 <span>Participants</span>
                             </button>
-                            <button className="cursor-pointer items-center h-full whitespace-nowrap center flex gap-2 bg-background text-primary border-2 border-primary py-2 px-4 rounded-xl text-sm hover:bg-primary hover:text-text_main transition duration-500">
+                            <button 
+                                onClick={handleAnalyticsClick}
+                                className="cursor-pointer items-center h-full whitespace-nowrap center flex gap-2 bg-background text-primary border-2 border-primary py-2 px-4 rounded-xl text-sm hover:bg-primary hover:text-text_main transition duration-500"
+                            >
                                 <span><ChartColumn className="w-4 h-4"/></span>
                                 <span>Analytics</span>
                             </button>
-                            <button className="cursor-pointer items-center h-full whitespace-nowrap center flex gap-2 bg-background text-primary border-2 border-primary py-2 px-4 rounded-xl text-sm hover:bg-primary hover:text-text_main transition duration-500">
+                            <button 
+                                onClick={handleEditClick}
+                                className="cursor-pointer items-center h-full whitespace-nowrap center flex gap-2 bg-background text-primary border-2 border-primary py-2 px-4 rounded-xl text-sm hover:bg-primary hover:text-text_main transition duration-500"
+                            >
                                 <span><Pencil className="w-4 h-4"/></span>
                                 <span>Edit Competition</span>
                             </button>
                         </div>
                     </div>
                 </main>
+                <div className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-primary text-text_main px-4 py-2 rounded shadow-md transition-opacity duration-500 font-mono ${showMessage ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                    {message}
+                </div>
             </div>
         </>
     );

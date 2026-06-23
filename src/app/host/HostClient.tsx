@@ -3,12 +3,14 @@
 import {useState, useEffect, useRef} from 'react';
 import Link from 'next/link'
 import Image from 'next/image';
-import {Users, FileText, Calendar, Plus} from "lucide-react";
+import {Users, FileText, Calendar, Plus, Sticker} from "lucide-react";
+import {findContests} from '@funcs/actions';
 import {useRouter} from 'next/navigation';
 import {themeColors} from "@lib/theme";
 import {useTheme} from '@lib/themeProvider';
 import {Settings} from "lucide-react";
 import {motion, AnimatePresence} from "framer-motion"
+import {ContestCard} from './contestCard';
 
 function getCookie(name: string) {
   const value = `; ${document.cookie}`;
@@ -19,13 +21,26 @@ function getCookie(name: string) {
   return undefined;
 }
 
+type Contest = {
+  competition_id: number;
+  name: string;
+  start_datetime: string;
+  end_datetime: string;
+  participants_count: number;
+  submissions: number;
+}
+
 export default function HostClient() {
   const router = useRouter();
   const {currentTheme, isMounted, toggleTheme} = useTheme();
   const themeRef = useRef(currentTheme);
+  const [loading, setLoading] = useState('loading');
+  const [showMessage, setShowMessage] = useState(false);
+  const [message, setMessage] = useState('');
   const transitionRef = useRef({factor: 1, prevTheme: currentTheme});
   const [paletteOpen, setPaletteOpen] = useState(false);
   const paletteRef = useRef<HTMLDivElement>(null);
+  const [contests, setContests] = useState<Contest[]>([]);
 
   const togglePalette = () => {
     setPaletteOpen(!paletteOpen);
@@ -67,6 +82,29 @@ export default function HostClient() {
       transitionRef.current.factor = 1; 
     }
   }, [isMounted]);
+
+  useEffect(() => {
+    // CHANGE THIS //
+
+    //const id = parseInt(getCookie('hostId') || '0', 10);
+    const id = 1;
+    fetchContestData(id);
+  }, []);
+
+  const fetchContestData = async (hostId: number) => {   
+    setLoading('loading');
+    const res = await findContests(hostId);
+
+    if (!res.success) {
+      setMessage(res.message);
+      setShowMessage(true);
+      setTimeout(() => setShowMessage(false), 3000);
+      return;
+    }
+
+    setContests(res.data || []);
+    setLoading('');
+  };
 
   if (!isMounted) {
     return null;
@@ -116,57 +154,65 @@ export default function HostClient() {
           </Link>
         <main className='font-mono flex flex-col gap-[18px] row-start-2 items-stretch'>
           <div className="flex items-center justify-between gap-2">
-            <div className='transition-all duration-300 font-mono text-2xl text-text_secondary'>
+            <div className='transition-all duration-300 font-mono sm:text-2xl text-xl text-text_secondary'>
               Your Competitions
             </div>
-            <Link href='/host/contests' className='group text-base transition-all duration-300 ease-in-out rounded-[10] flex items-center justify-center bg-secondary text-text_main hover:bg-secondary_dark dark:hover:bg-secondary_dark font-medium h-10 sm:h-12 px-4 sm:px-5 sm:w-auto'>
+            <Link href='/host/contests' className='group md:text-base text-sm transition-all duration-300 ease-in-out rounded-[10] flex items-center justify-center bg-secondary text-text_main hover:bg-secondary_dark dark:hover:bg-secondary_dark font-medium h-10 sm:h-12 px-4 sm:px-5 sm:w-auto'>
               <Plus className="w-4 h-4"/>
-              <span className="max-w-0 overflow-hidden whitespace-nowrap transition-all duration-700 ease-in-out sm:group-hover:max-w-xs sm:group-hover:duration-1000">
+              <span className="max-w-0 overflow-hidden whitespace-nowrap transition-all duration-700 ease-in-out md:group-hover:max-w-xs md:group-hover:duration-1000">
                 &nbsp;New Competition
               </span>
             </Link>
           </div>
-          <div className="transition-all duration-300 w-full hover:bg-primary_dark cursor-pointer rounded-xl p-6 bg-primary text-text_main hover:scale-102 transition">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="text-xl font-medium">Contest Name</h2>
+          {contests.map((contest) => (
+            <ContestCard key={contest.competition_id} contest={contest} clickable={true}/>
+          ))}
+          {loading === 'loading' && (
+            <div className="md:min-w-150 transition-all duration-300 w-full hover:bg-primary_dark rounded-xl p-6 bg-primary text-text_main hover:scale-102 transition">
+              <div className="flex items-center justify-between gap-5">
+                  <h2 className="text-lg sm:text-xl font-medium">Loading...</h2>
+                  <span className="text-sm px-3 py-1 rounded-full bg-background/15">
+                      Loading...
+                  </span>
+              </div>
 
-              <span className="text-sm px-3 py-1 rounded-full bg-background/15">
-                Upcoming
-              </span>
-            </div>
-
-            <div className="flex flex-col text-sm sm:flex-row sm:gap-10">
-              <div className="flex gap-2 mt-4 text-sm">
-                <Users className="w-4 h-4"/> 128 participants
-              </div>
-              <div className="center flex gap-2 mt-4 text-sm">
-                <FileText className="w-4 h-4"/> 128 submissions
-              </div>
-              <div className="center flex gap-2 mt-4 text-sm">
-                <Calendar className="w-4 h-4"/> Feb 28, 2026 - Mar 31, 2026
-              </div>
-            </div>
-          </div>
-          <div className="transition-all duration-300 w-full hover:bg-primary_dark cursor-pointer rounded-xl p-6 bg-primary text-text_main hover:scale-102 transition">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="text-xl font-medium">Contest Name</h2>
-
-              <span className="text-sm px-3 py-1 rounded-full bg-background/15">
-                Completed
-              </span>
-            </div>
-
-            <div className="flex flex-col text-sm sm:flex-row sm:gap-10">
-              <div className="flex gap-2 mt-4 text-sm">
-                <Users className="w-4 h-4"/> 128 participants
-              </div>
-              <div className="center flex gap-2 mt-4 text-sm">
-                <FileText className="w-4 h-4"/> 128 submissions
-              </div>
-              <div className="center flex gap-2 mt-4 text-sm">
-                <Calendar className="w-4 h-4"/> Feb 28, 2026 - Mar 31, 2026
+              <div className="flex flex-col text-sm md:flex-row md:gap-10">
+                  <div className="flex gap-2 mt-4 text-sm whitespace-nowrap">
+                      <Users className="w-4 h-4"/> Loading...
+                  </div>
+                  <div className="center flex gap-2 mt-4 text-sm whitespace-nowrap">
+                      <FileText className="w-4 h-4"/> Loading...
+                  </div>
+                  <div className="center flex gap-2 mt-4 text-sm whitespace-nowrap">
+                      <Calendar className="w-4 h-4 shrink-0"/> Loading...
+                  </div>
               </div>
             </div>
+          )}
+          {loading !== 'loading' && contests.length === 0 && (
+            <div className="md:min-w-150 transition-all duration-300 w-full hover:bg-primary_dark rounded-xl p-6 bg-primary text-text_main hover:scale-102 transition">
+              <div className="flex items-center justify-between gap-5">
+                  <h2 className="text-lg sm:text-xl font-medium">You have no competitions yet!</h2>
+                  <span className="text-sm px-3 py-1 rounded-full bg-background/15">
+                    <Sticker className="w-4 h-4"/>
+                </span>
+              </div>
+
+              <div className="flex flex-col text-sm md:flex-row md:gap-10">
+                  <div className="flex gap-2 mt-4 text-sm whitespace-nowrap">
+                      <Users className="w-4 h-4"/> Create
+                  </div>
+                  <div className="center flex gap-2 mt-4 text-sm whitespace-nowrap">
+                      <FileText className="w-4 h-4"/> One
+                  </div>
+                  <div className="center flex gap-2 mt-4 text-sm whitespace-nowrap">
+                      <Calendar className="w-4 h-4 shrink-0"/> Now!
+                  </div>
+              </div>
+            </div>
+          )}
+          <div className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-primary text-text_main px-4 py-2 rounded shadow-md transition-opacity duration-500 font-mono ${showMessage ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            {message}
           </div>
         </main>
       </div>

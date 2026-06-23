@@ -8,7 +8,7 @@ import {MathJax, MathJaxContext} from 'better-react-mathjax';
 import {Settings, Move, X, Calculator} from "lucide-react";
 import {themeColors} from "@lib/theme";
 import {useTheme} from '@lib/themeProvider';
-import {motion, AnimatePresence, useDragControls} from "framer-motion"
+import {motion, AnimatePresence, useDragControls, useMotionValue} from "framer-motion"
 import {ReactSVG} from 'react-svg';
 import Script from 'next/script';
 
@@ -56,7 +56,6 @@ export default function ContestClient() {
   const desmosInstance = useRef<Desmos.BasicCalculator | null>(null);
   const constraintsRef = useRef<HTMLDivElement | null>(null);
   const dragControls = useDragControls();
-  const [calcZoom, setCalcZoom] = useState(1);
 
   const togglePalette = () => {
     setPaletteOpen(!paletteOpen);
@@ -321,18 +320,6 @@ export default function ContestClient() {
 
   useEffect(() => {
     const updateZoom = () => {
-      if (window.innerWidth < 450) {
-        setCalcZoom(0.60);
-      }
-      else if (window.innerWidth < 640) {
-        setCalcZoom(0.75);
-      }
-      else if (window.innerWidth < 768) {
-        setCalcZoom(0.85);
-      }
-      else {
-        setCalcZoom(1);
-      }
       setCalcOpen(false);
     };
     updateZoom();
@@ -510,11 +497,11 @@ export default function ContestClient() {
             }}
             transition={{duration: 0.2}}
             style={{visibility: calcOpen ? 'visible' : 'hidden'}}
-            className="fixed bottom-10 right-10 z-50"
+            className="fixed bottom-4 right-4 sm:bottom-10 sm:right-10 z-50"
           >
-            <div className="transition-all duration-700 border-2 border-primary rounded-xl overflow-hidden shadow-xl bg-background flex flex-col origin-bottom-right" style={{zoom: calcZoom}}>
+            <div className="transition-all duration-700 border-2 border-primary rounded-xl overflow-hidden shadow-xl bg-background flex flex-col origin-bottom-right">
               <div 
-                onPointerDown={(e) => dragControls.start(e)} 
+                onPointerDown={(e) => {e.preventDefault(); dragControls.start(e);}} 
                 className="touch-none bg-background border-b border-primary/20 px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2.5 flex items-center justify-between cursor-grab active:cursor-grabbing select-none"
               >
                 <div className="flex items-center gap-3 text-text_secondary text-sm font-mono">
@@ -529,10 +516,10 @@ export default function ContestClient() {
                 </button>
               </div>
 
-              <div className="w-full bg-white">
+              <div className="w-full bg-white overflow-auto max-w-[calc(80vw-2rem)] max-h-[60vh]">
                 <div
                   ref={calculatorRef} 
-                  style={{width: '100%', height: '400px'}} 
+                  style={{width: '350px', height: '350px'}}
                 />
               </div>
             </div>

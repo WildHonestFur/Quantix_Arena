@@ -438,3 +438,46 @@ export async function getAnswers(competitionId: number, participantId: number) {
 
   return {success: true, message: '', answers: answersDict, points: pointsReceived};
 }
+
+export async function findContests(hostId: number) {
+  const {data, error} = await supabase
+    .rpc('get_contests', {
+      check_id: hostId
+    })
+    .select('start_datetime, end_datetime, participants_count, submissions, name, competition_id')
+
+  if (error) {
+    return {success: false, message: 'Server error'};
+  }
+
+  return {success: true, data: data, message: ''};
+}
+
+export async function findParticularContest(contestId: number) {
+  const {data, error} = await supabase
+    .rpc('get_one_contest', {
+      contest_id: contestId
+    })
+    .select('start_datetime, end_datetime, participants_count, submissions, name, competition_id')
+    .maybeSingle()
+
+  if (error || !data) {
+    return {success: false, message: 'Server error'};
+  }
+
+  return {success: true, data: data, message: ''};
+}
+
+export async function getTestingWindows(contestId: number) {
+  const {data, error} = await supabase
+    .rpc('get_testing_windows', {
+      contest_id: contestId
+    })
+    .select('start_datetime, end_datetime')
+
+  if (error || data.length === 0) {
+    return {success: false, message: 'Server error'};
+  }
+
+  return {success: true, data: data, message: ''};
+}
