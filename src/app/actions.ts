@@ -279,9 +279,11 @@ export async function submit(competitionId: number, participantId: number, value
     return {success: false, message: 'Server error'};
   }
 
+  const now = new Date();
+
   const {error: updateError} = await supabase
     .from('participants')
-    .update({submitted: true})
+    .update({submitted: true, submitted_at: now})
     .eq('id', participantId)
 
   if (updateError) {

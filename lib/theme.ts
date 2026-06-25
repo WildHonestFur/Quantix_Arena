@@ -43,17 +43,6 @@ export const themeColors = {
     text_secondary: "#0f0f0f",
     logo: "/aurora.png"
   },
-  dune: {
-    name: "dune",
-    background: "#f1efec",
-    primary: "#123458",
-    primary_dark: "#0f3053",
-    secondary: "#ad9c8a",
-    secondary_dark: "#a4927f",
-    text_main: "#eeeeee",
-    text_secondary: "#0f0f0f",
-    logo: "/dune.png"
-  },
   seafoam: {
     name: "sea foam",
     background: "#a2d0ec",

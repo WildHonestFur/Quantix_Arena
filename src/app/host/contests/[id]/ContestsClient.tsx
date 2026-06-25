@@ -10,7 +10,7 @@ import {findParticularContest, getTestingWindows} from '@funcs/actions';
 import {useTheme} from '@lib/themeProvider';
 import {Settings} from "lucide-react";
 import {motion, AnimatePresence} from "framer-motion"
-import {ContestCard} from '../../contestCard';
+import {ContestCard} from '@/app/host/contestCard';
 
 function getCookie(name: string) {
   const value = `; ${document.cookie}`;
