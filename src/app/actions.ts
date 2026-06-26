@@ -483,3 +483,32 @@ export async function getTestingWindows(contestId: number) {
 
   return {success: true, data: data, message: ''};
 }
+
+export async function getIdentifiers(contestId: number) {
+  const {data, error} = await supabase
+    .rpc('get_identifiers', {
+      contest_id: contestId
+    })
+    .select('identifier')
+
+  if (error || data.length === 0) {
+    return {success: false, message: 'Server error'};
+  }
+
+  const identifiersList = data.map(row => row.identifier);
+  return {success: true, data: identifiersList, message: ''};
+}
+
+export async function getParticipantData(contestId: number) {
+  const {data, error} = await supabase
+    .rpc('get_participant_data', {
+      contest_id: contestId
+    })
+    .select('participant_id, identifiers, total_score, max_score, submitted, started_at, submitted_at, warnings')
+
+  if (error) {
+    return {success: false, message: 'Server error'};
+  }
+
+  return {success: true, data: data, message: ''};
+}

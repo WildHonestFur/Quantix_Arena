@@ -8,8 +8,9 @@ import {useRouter} from 'next/navigation';
 import {themeColors} from "@lib/theme";
 import {useTheme} from '@lib/themeProvider';
 import {motion, AnimatePresence} from "framer-motion"
-import {findParticularContest} from '@funcs/actions';
+import {findParticularContest, getParticipantData, getIdentifiers} from '@funcs/actions';
 import {ContestCard} from '@/app/host/contestCard';
+import {ParticipantTable} from './participantsTable';
 import {
   DndContext,
   closestCenter,
@@ -48,6 +49,29 @@ type Contest = {
   submissions: number | string;
 }
 
+type Participant = {
+  participant_id: number;
+  identifiers: string[];
+  total_score: number;
+  max_score: number;
+  submitted: boolean;
+  started_at: string | null;
+  submitted_at: string | null;
+  warnings: number;
+}
+
+type SortRule = {
+    id: string
+    key: string
+    direction: "asc" | "desc"
+}
+
+type SortableItemProps = {
+    rule: SortRule;
+    toggleDirection: (id: string) => void;
+    removeRule: (id: string) => void;
+}
+
 export default function ParticipantsClient({id}: {id: string}) {
     const router = useRouter();
     const contest_id = parseInt(id || '0', 10);
@@ -60,25 +84,13 @@ export default function ParticipantsClient({id}: {id: string}) {
         useSensor(PointerSensor),
         useSensor(TouchSensor)
     );
-    type SortRule = {
-        id: string
-        key: string
-        direction: "asc" | "desc"
-    }
-    type SortableItemProps = {
-        rule: SortRule;
-        toggleDirection: (id: string) => void;
-        removeRule: (id: string) => void;
-    }
 
     const [sortRules, setSortRules] = useState<SortRule[]>([])
-
     const availableMetrics = [
         {id: '1', key: 'Score'},
         {id: '2', key: 'Completion Time'},
-        {id: '3', key: 'First Incorrect Answer'},
-        {id: '4', key: 'Status'},
-        {id: '5', key: 'Random'}
+        {id: '3', key: 'Status'},
+        {id: '4', key: 'Random'}
     ]
     const unusedMetrics = availableMetrics.filter(metric => !sortRules.some(rule => rule.id === metric.id))
 
@@ -100,6 +112,13 @@ export default function ParticipantsClient({id}: {id: string}) {
         submissions: 'Loading...'
     }
     const [contest, setContest] = useState<Contest>(loadingContest);
+
+    const [contestIdentifiers, setContestIdentifiers] = useState<string[]>([]);
+    const [participants, setParticipants] = useState<Participant[]>([]);
+    const [participantsSorted, setParticipantsSorted] = useState<Participant[]>([]);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [pageNumber, setPageNumber] = useState(1);
+    const itemsPerPage = 10;
 
     const togglePalette = () => {
         setPaletteOpen(!paletteOpen);
@@ -240,6 +259,8 @@ export default function ParticipantsClient({id}: {id: string}) {
 
     useEffect(() => {
         fetchContestData();
+        fetchIdentifiers();
+        fetchParticipantData();
     }, []);
 
     const fetchContestData = async () => {   
@@ -255,6 +276,114 @@ export default function ParticipantsClient({id}: {id: string}) {
 
         setContest(res.data || loadingContest);
         setLoading('');
+    };
+
+    const fetchIdentifiers = async () => {   
+        setLoading('loading');
+        const res = await getIdentifiers(contest_id);
+
+        if (!res.success) {
+            setMessage(res.message);
+            setShowMessage(true);
+            setTimeout(() => setShowMessage(false), 3000);
+            return;
+        }
+
+        setContestIdentifiers(res.data || []);
+        setLoading('');
+    };
+
+    const fetchParticipantData = async () => {   
+        setLoading('loading');
+        const res = await getParticipantData(contest_id);
+
+        if (!res.success) {
+            setMessage(res.message);
+            setShowMessage(true);
+            setTimeout(() => setShowMessage(false), 3000);
+            return;
+        }
+
+        setParticipants(res.data || []);
+        setParticipantsSorted(res.data || []);
+        setLoading('');
+    };
+
+    useEffect(() => {
+        const filteredParticipants = participants.filter((participant) =>
+            participant.identifiers.some((id) => id.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+        setParticipantsSorted([...filteredParticipants].sort((a, b) => {
+            for (const rule of sortRules) {
+                const {key, direction} = rule;
+                let multiplier = 1;
+                if (direction == 'desc') {
+                    multiplier = -1;
+                }
+
+                if (key === 'Completion Time') {
+                    if ((!a.started_at || !a.submitted_at) && (!b.started_at || !b.submitted_at)) {
+                        continue
+                    }
+                    if ((!a.started_at || !a.submitted_at) && b.started_at && b.submitted_at) {
+                        return 1*multiplier;
+                    }
+                    if (a.started_at && a.submitted_at && (!b.started_at || !b.submitted_at)) {
+                        return -1*multiplier;
+                    }
+
+                    const a_startTime = new Date(a.started_at || '').getTime();
+                    const a_endTime = new Date(a.submitted_at || '').getTime(); 
+                    const a_diffMs = a_endTime - a_startTime;
+
+                    const b_startTime = new Date(b.started_at || '').getTime();
+                    const b_endTime = new Date(b.submitted_at || '').getTime(); 
+                    const b_diffMs = b_endTime - b_startTime;
+
+                    if (a_diffMs === b_diffMs) {
+                        continue;
+                    }
+                    return (a_diffMs - b_diffMs)*multiplier;
+                }
+                else if (key === 'Status') {
+                    const status: Record<string, number> = {
+                        "Completed": 3,
+                        "In Progress": 2,
+                        "Not Started": 1,
+                        "Blocked": 0
+                    };
+                    if (status[findStatus(a)] === status[findStatus(b)]) {
+                        continue;
+                    }
+                    return (status[findStatus(a)]-status[findStatus(b)])*multiplier;
+                }
+                else if (key === 'Score') {
+                    if (a.total_score === b.total_score) {
+                        continue;
+                    }
+                    return (a.total_score-b.total_score)*multiplier;
+                }
+                else if (key === 'Random') {
+                    return Math.random() < 0.5 ? -1 : 1;
+                }
+            }
+            return 0;
+        }));
+        setPageNumber(1);
+    }, [sortRules, searchTerm]);
+
+    const findStatus = (participant: Participant) => {   
+        let statusText = 'Not Started';
+        if (participant.submitted) {
+            statusText = 'Completed';
+        }
+        else if (participant.started_at) {
+            statusText = 'In Progress';
+        }
+        if (participant.warnings > 3) {
+            statusText = 'Blocked';
+        }
+        return statusText;
     };
 
     if (!isMounted) {
@@ -332,17 +461,21 @@ export default function ParticipantsClient({id}: {id: string}) {
                     <div className="w-full rounded-xl p-6 bg-secondary text-text_main">
                         <div className="flex flex-col sm:flex-row items-center sm:justify-between sm:items-center items-start sm:gap-5">
                             <h2 className="text-base font-medium sm:mb-1 mb-2">Participants</h2>
-                            <div className="flex items-center gap-3 w-full sm:w-auto">
+                            <div className="transition-all duration-300 flex items-center gap-3 w-full sm:w-auto">
                                 <div className="mb-1 relative w-full sm:max-w-sm">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text_main"/>
                                     <input
                                         type="text"
                                         placeholder="Search"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
                                         className="block sm:hidden w-full pl-10 pr-4 py-2 rounded-lg border-2 border-secondary_dark bg-secondary_dark text-xs text-text_main placeholder:text-text_placeholder_secondary focus:outline-none focus:ring-2 focus:ring-secondary_dark focus:ring focus:ring-offset-2 focus:ring-offset-secondary hover:bg-secondary transition duration-300"
                                     />
                                     <input
                                         type="text"
                                         placeholder="Search participants"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
                                         className="sm:block hidden w-full pl-10 pr-4 py-2 rounded-lg border-2 border-secondary_dark bg-secondary_dark text-sm text-text_main placeholder:text-text_placeholder_secondary focus:outline-none focus:ring-2 focus:ring-secondary_dark focus:ring focus:ring-offset-2 focus:ring-offset-secondary hover:bg-secondary transition duration-300"
                                     />
                                 </div>
@@ -424,95 +557,50 @@ export default function ParticipantsClient({id}: {id: string}) {
                                 </div>
                             </div>
                         </div>
-                        <div className="max-w-full overflow-hidden border-2 border-text_main rounded-xl bg-primary_dark mt-3">
-                            <div className='overflow-x-auto'>
-                                <table className="w-full text-sm overflow-hidden">
-                                    <thead className="text-left">
-                                    <tr className='whitespace-nowrap'>
-                                        <th></th>
-                                        <th className="p-4 font-medium">First Name + Last Inital</th>
-                                        <th className="p-4 font-medium">Schoolhouse Profile</th>
-                                        <th className="p-4 font-medium">Score</th>
-                                        <th className="p-4 font-medium">Completion Time</th>
-                                        <th className="p-4 font-medium">Status</th>
-                                    </tr>
-                                    </thead>
-
-                                    <tbody>
-                                        <tr
-                                            key={1}
-                                            className="border-t border-text_main/20 hover:bg-primary cursor-pointer transition duration-300 hover:shadow-sm"
-                                        >
-                                        <td className="p-4">1</td>
-                                        <td className="p-4">Hello</td>
-                                        <td className="p-4">5</td>
-                                        <td className="p-4">1/1</td>
-                                        <td className="p-4">01h 35m 06s</td>
-                                        <td className="p-4">
-                                            <span className="whitespace-nowrap px-3 py-1 rounded-full bg-background/15">
-                                                Completed
-                                            </span>
-                                        </td>
-                                        </tr>
-                                        <tr
-                                            key={2}
-                                            className="border-t border-text_main/20 hover:bg-primary cursor-pointer transition duration-300 hover:shadow-sm"
-                                        >
-                                        <td className="p-4">2</td>
-                                        <td className="p-4">Bye Bye</td>
-                                        <td className="p-4">6</td>
-                                        <td className="p-4">1/1</td>
-                                        <td className="p-4">00h 55m 51s</td>
-                                        <td className="p-4">
-                                            <span className="whitespace-nowrap px-3 py-1 rounded-full bg-background/15">
-                                                In Progress
-                                            </span>
-                                        </td>
-                                        </tr>
-                                        <tr
-                                            key={3}
-                                            className="border-t border-text_main/20 hover:bg-primary cursor-pointer transition duration-300 hover:shadow-sm"
-                                        >
-                                        <td className="p-4">3</td>
-                                        <td className="p-4">Back Again</td>
-                                        <td className="p-4">8</td>
-                                        <td className="p-4">1/1</td>
-                                        <td className="p-4">01h 15m 18s</td>
-                                        <td className="p-4">
-                                            <span className="whitespace-nowrap px-3 py-1 rounded-full bg-background/15">
-                                                Blocked
-                                            </span>
-                                        </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                        <ParticipantTable
+                            participants={participantsSorted} 
+                            contestIdentifiers={contestIdentifiers} 
+                            itemsPerPage={itemsPerPage}
+                            currentPage={pageNumber}
+                        />
                         <div className="flex items-center justify-between mt-4 px-1 sm:text-sm text-xs text-text_main">
-                            <div className='flex items-center cursor-pointer'>
+                            <button className='w-24 flex justify-start items-center cursor-pointer disabled:cursor-not-allowed disabled:opacity-75' onClick={() => setPageNumber(p => Math.max(p - 1, 1))} disabled={pageNumber === 1}>
                                 <span>
                                     <ChevronLeft/>
                                 </span>
                                 <span className="sm:block hidden">
                                     Previous
                                 </span>
+                            </button>
+                            <div className="text-center flex-1">
+                                {participantsSorted.length === 0 ? (
+                                    <>
+                                        <span className="text-text_placeholder_secondary hidden sm:block">
+                                            Showing 0-0 of 0
+                                        </span>
+                                        <span className="text-text_placeholder_secondary block sm:hidden">
+                                            0-0 of 0
+                                        </span>
+                                    </>
+                                ) : (
+                                    <div>
+                                        <span className="text-text_placeholder_secondary hidden sm:block">
+                                            Showing {(pageNumber-1)*itemsPerPage+1}-{Math.min(pageNumber*itemsPerPage, participantsSorted.length)} of {participantsSorted.length}
+                                        </span>
+                                        <span className="text-text_placeholder_secondary block sm:hidden">
+                                            {(pageNumber-1)*itemsPerPage+1}-{Math.min(pageNumber*itemsPerPage, participantsSorted.length)} of {participantsSorted.length}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
-                            <div>
-                                <span className="text-text_placeholder_secondary hidden sm:block">
-                                    Showing 51-100 of 128
-                                </span>
-                                <span className="text-text_placeholder_secondary block sm:hidden">
-                                    51-100 of 128
-                                </span>
-                            </div>
-                            <div className='flex items-center cursor-pointer'>
+                            <button className='w-24 flex justify-end items-center cursor-pointer disabled:cursor-not-allowed disabled:opacity-75' onClick={() => setPageNumber(p => Math.min(p+1, Math.ceil(participantsSorted.length/itemsPerPage)))} disabled={pageNumber === Math.max(1, Math.ceil(participantsSorted.length/itemsPerPage))}>
                                 <span className="sm:block hidden">
                                     Next
                                 </span>
                                 <span>
                                     <ChevronRight/>
                                 </span>
-                            </div>
+                            </button>
                         </div>
                     </div>
                 </main>
