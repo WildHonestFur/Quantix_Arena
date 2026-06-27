@@ -21,7 +21,7 @@
     "next": "^16.2.9",
     "react": "19.2.7",
     "react-dom": "19.2.7",
-    "react-svg": "^17.2.2",
+    "react-svg": "^17.2.4",
     "recharts": "^3.9.0"
   },
   "devDependencies": {
