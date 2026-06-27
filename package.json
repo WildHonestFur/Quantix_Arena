@@ -28,7 +28,7 @@
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/desmos": "^1.11.0",
-    "@types/mathjs": "^9.4.1",
+    "@types/mathjs": "^9.4.2",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
