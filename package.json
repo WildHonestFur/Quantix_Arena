@@ -22,7 +22,7 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-svg": "^17.2.2",
-    "recharts": "^3.7.0"
+    "recharts": "^3.9.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
