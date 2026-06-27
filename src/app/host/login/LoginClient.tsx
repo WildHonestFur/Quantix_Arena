@@ -305,18 +305,16 @@ export default function LoginClient() {
               priority
             />
           </Link>
-          <div className='flex gap-2 min-w-60'>
+          <div className='flex gap-2 min-w-60 items-end'>
             <button
-              type='submit'
               onClick={() => switchMode('login')}
-              className={`transition-all duration-300 ease-in-out rounded-l-full border border-solid border-transparent transition-colors flex items-center justify-center ${mode === 'login' ? "bg-primary hover:bg-primary_dark" : "bg-secondary hover:bg-secondary_dark"} text-text_main gap-2 font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`transition-all duration-300 ease-in-out rounded-t-lg border border-solid border-transparent transition-colors flex items-center justify-center ${mode === 'login' ? "bg-primary hover:bg-primary_dark h-12 z-10" : "bg-secondary hover:bg-secondary_dark h-10"} text-text_main gap-2 font-medium text-sm sm:text-base px-4 sm:px-5 w-full cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               Log In
             </button>
             <button
-              type='submit'
               onClick={() => switchMode('signup')}
-              className={`transition-all duration-300 ease-in-out rounded-r-full border border-solid border-transparent transition-colors flex items-center justify-center ${mode === 'signup' ? "bg-primary hover:bg-primary_dark" : "bg-secondary hover:bg-secondary_dark"} text-text_main gap-2 font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`transition-all duration-300 ease-in-out rounded-t-lg border border-solid border-transparent transition-colors flex items-center justify-center ${mode === 'signup' ? "bg-primary hover:bg-primary_dark h-12 z-10" : "bg-secondary hover:bg-secondary_dark h-10"} text-text_main gap-2 font-medium text-sm sm:text-base px-4 sm:px-5 w-full cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               Sign Up
             </button>

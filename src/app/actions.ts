@@ -512,3 +512,60 @@ export async function getParticipantData(contestId: number) {
 
   return {success: true, data: data, message: ''};
 }
+
+export async function getIndividualParticipantData(contestId: number, participantId: number) {
+  const {data, error} = await supabase
+    .rpc('get_participant_data', {
+      contest_id: contestId,
+      participant_id: participantId
+    })
+    .select('participant_id, identifiers, total_score, max_score, submitted, started_at, submitted_at, warnings')
+    .maybeSingle()
+
+  if (error || !data) {
+    return {success: false, message: 'Server error'};
+  }
+
+  return {success: true, data: data, message: ''};
+}
+
+export async function getParticipantQuestionData(contestId: number, participantId: number) {
+  const {data, error} = await supabase
+    .rpc('get_participant_questions', {
+      contest_id: contestId,
+      participant_id: participantId
+    })
+    .select('question_number, question_text, correct_answer, chosen_answer, total_score, max_score')
+
+  if (error) {
+    return {success: false, message: 'Server error'};
+  }
+
+  return {success: true, data: data, message: ''};
+}
+
+export async function removeParticipantStrike(participantId: number) {
+  const {error} = await supabase
+    .rpc('remove_participant_strike', {
+      participant_id: participantId
+    })
+
+  if (error) {
+    return {success: false, message: 'Server error'};
+  }
+
+  return {success: true, message: ''};
+}
+
+export async function resetParticipantStrikes(participantId: number) {
+  const {error} = await supabase
+    .rpc('reset_participant_strikes', {
+      participant_id: participantId
+    })
+
+  if (error) {
+    return {success: false, message: 'Server error'};
+  }
+
+  return {success: true, message: ''};
+}

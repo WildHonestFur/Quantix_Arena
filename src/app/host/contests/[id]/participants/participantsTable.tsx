@@ -1,5 +1,7 @@
 'use client';
 
+import {useRouter, usePathname} from 'next/navigation';
+
 type Participant = {
   participant_id: number;
   identifiers: string[];
@@ -46,6 +48,12 @@ export const ParticipantTable: React.FC<ParticipantTableProps> = ({
   };
   const offset = (currentPage - 1) * itemsPerPage;
   const displayedParticipants = participants.slice(offset, offset + itemsPerPage);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const participantRedirect = (participant_id: number) => {
+    router.push(`${pathname}/${participant_id}`);
+  };
 
   return (
     <div className="max-w-full overflow-hidden border-2 border-text_main rounded-xl bg-primary_dark mt-3">
@@ -80,6 +88,7 @@ export const ParticipantTable: React.FC<ParticipantTableProps> = ({
                             <tr
                                 key={participant.participant_id}
                                 className="border-t border-text_main/20 hover:bg-primary cursor-pointer transition duration-300 hover:shadow-sm"
+                                onClick={() => participantRedirect(participant.participant_id)}
                             >
                                 <td className="p-4">{offset+index+1}</td>
                                 {contestIdentifiers.map((_, identifier_index) => (

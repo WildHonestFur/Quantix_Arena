@@ -59,10 +59,10 @@ export function ContestCard({contest, clickable}: {contest: Contest, clickable: 
 
         <div className="flex flex-col text-sm md:flex-row md:gap-10">
             <div className="flex gap-2 mt-4 text-sm whitespace-nowrap">
-                <Users className="w-4 h-4"/> {contest.participants_count || 0} participants
+                <Users className="w-4 h-4"/> {contest.participants_count || 0} {contest.participants_count === 1 ? 'participant' : 'participants'}
             </div>
             <div className="center flex gap-2 mt-4 text-sm whitespace-nowrap">
-                <FileText className="w-4 h-4"/> {contest.submissions || 0} submissions
+                <FileText className="w-4 h-4"/> {contest.submissions || 0} {contest.submissions === 1 ? 'submission' : 'submissions'}
             </div>
             <div className="center flex gap-2 mt-4 text-sm whitespace-nowrap">
                 <Calendar className="w-4 h-4 shrink-0"/> {dateRange}
