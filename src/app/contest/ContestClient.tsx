@@ -446,7 +446,7 @@ export default function ContestClient() {
                             onChange={() => handleRadioToggle(q.id, option)}
                           />
                           <div className='w-4 h-4 rounded-full border-2 border-secondary flex-shrink-0 peer-checked:border-primary peer-checked:bg-primary transition-colors duration-300'></div>
-                          <span className='text-text_secondary peer-checked:text-primary'>
+                          <span className='text-text_secondary peer-checked:text-primary [&_mjx-container]:pointer-events-none [&_.MathJax]:pointer-events-none'>
                             <MathJax>{option}</MathJax>
                           </span>
                         </label>
