@@ -141,7 +141,7 @@ export default function ContestsClient({id}: {id: string}) {
             return;
         }
 
-        setTestingWindows(res.data || []);
+        setTestingWindows(Array.isArray(res.data) ? res.data : []);
         setLoading('');
     };
 
