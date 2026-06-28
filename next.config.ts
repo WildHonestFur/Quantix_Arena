@@ -13,7 +13,8 @@ const nextConfig: NextConfig = {
         serverActions: {
             allowedOrigins: [
                 '*.app.github.dev',
-                'localhost:3000'
+                'localhost:3000',
+                'localhost:3001',
             ]
         }
     },
