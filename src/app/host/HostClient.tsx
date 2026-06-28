@@ -102,7 +102,7 @@ export default function HostClient() {
       return;
     }
 
-    setContests(res.data || []);
+    setContests(Array.isArray(res.data) ? res.data : []);
     setLoading('');
   };
 
