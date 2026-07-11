@@ -477,7 +477,7 @@ export async function getTestingWindows(contestId: number) {
     })
     .select('start_datetime, end_datetime')
 
-  if (error || data.length === 0) {
+  if (error || !data) {
     return {success: false, message: 'Server error'};
   }
 
@@ -491,11 +491,11 @@ export async function getIdentifiers(contestId: number) {
     })
     .select('identifier')
 
-  if (error || data.length === 0) {
+  if (error || !data) {
     return {success: false, message: 'Server error'};
   }
 
-  const identifiersList = data.map(row => row.identifier);
+  const identifiersList = Array.isArray(data) ? data.map(row => row.identifier) : [data.identifier];
   return {success: true, data: identifiersList, message: ''};
 }
 

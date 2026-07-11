@@ -289,7 +289,7 @@ export default function ParticipantsClient({id}: {id: string}) {
             return;
         }
 
-        setContestIdentifiers(res.data || []);
+        setContestIdentifiers(Array.isArray(res.data) ? res.data : []);
         setLoading('');
     };
 
@@ -304,8 +304,8 @@ export default function ParticipantsClient({id}: {id: string}) {
             return;
         }
 
-        setParticipants(res.data || []);
-        setParticipantsSorted(res.data || []);
+        setParticipants(Array.isArray(res.data) ? res.data : []);
+        setParticipantsSorted(Array.isArray(res.data) ? res.data : []);
         setLoading('');
     };
 

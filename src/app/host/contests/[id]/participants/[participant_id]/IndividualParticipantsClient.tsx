@@ -163,7 +163,7 @@ export default function ParticipantsClient({id, participantId}: {id: string, par
             return;
         }
 
-        setContestIdentifiers(res.data || []);
+        setContestIdentifiers(Array.isArray(res.data) ? res.data : []);
         setLoading('');
     };
 
@@ -193,8 +193,8 @@ export default function ParticipantsClient({id, participantId}: {id: string, par
             return;
         }
 
-        setQuestions(res.data || []);
-        setShowQuestionDetails(Array.from({length: (res.data || []).length}, () => false));
+        setQuestions(Array.isArray(res.data) ? res.data : []);
+        setShowQuestionDetails(Array.from({length: (Array.isArray(res.data) ? res.data : []).length}, () => false));
         setLoading('');
     };
 
