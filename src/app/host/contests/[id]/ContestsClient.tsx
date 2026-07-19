@@ -3,7 +3,7 @@
 import {useState, useEffect, useRef} from 'react';
 import Link from 'next/link'
 import Image from 'next/image';
-import {Users, FileText, Calendar, Hourglass, Clock8, Clock10, Clock12, ChartColumn, Pencil} from "lucide-react";
+import {Users, FileText, Calendar, Hourglass, Clock8, Clock10, Clock12, ChartColumn, Pencil, Copy} from "lucide-react";
 import {useRouter} from 'next/navigation';
 import {themeColors} from "@lib/theme";
 import {findParticularContest, getTestingWindows} from '@funcs/actions';
@@ -46,6 +46,7 @@ export default function ContestsClient({id}: {id: string}) {
     const [loading, setLoading] = useState('loading');
     const [showMessage, setShowMessage] = useState(false);
     const [message, setMessage] = useState('');
+    const [linkCopied, setLinkCopied] = useState(false);
     const loadingContest: Contest = {
         competition_id: 0,
         name: 'Loading...',
@@ -67,6 +68,24 @@ export default function ContestsClient({id}: {id: string}) {
 
     const handleEditClick = () => {
         router.push(`/host/contests/${contest_id}/edit`);
+    };
+
+    const handleCopyLink = async () => {
+        const link = `${window.location.origin}/join`;
+        try {
+            await navigator.clipboard.writeText(link);
+            setMessage('Contest link copied to clipboard');
+            setShowMessage(true);
+            setLinkCopied(true);
+            setTimeout(() => {
+                setShowMessage(false);
+                setLinkCopied(false);
+            }, 2000);
+        } catch (error) {
+            setMessage('Unable to copy link');
+            setShowMessage(true);
+            setTimeout(() => setShowMessage(false), 3000);
+        }
     };
 
     const togglePalette = () => {
@@ -303,6 +322,13 @@ export default function ContestsClient({id}: {id: string}) {
                             >
                                 <span><ChartColumn className="w-4 h-4"/></span>
                                 <span>Analytics</span>
+                            </button>
+                            <button 
+                                onClick={handleCopyLink}
+                                className="cursor-pointer items-center h-full whitespace-nowrap center flex gap-2 bg-background text-primary border-2 border-primary py-2 px-4 rounded-xl text-sm hover:bg-primary hover:text-text_main transition duration-500"
+                            >
+                                <span><Copy className="w-4 h-4"/></span>
+                                <span>{linkCopied ? 'Copied!' : 'Copy Join Link'}</span>
                             </button>
                             <button 
                                 onClick={handleEditClick}

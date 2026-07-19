@@ -40,15 +40,22 @@ export default function ContestClient() {
   const [name, setName] = useState('Loading...');
   const [showMessage, setShowMessage] = useState(false);
   const [message, setMessage] = useState('');
+  const [ackRequired, setAckRequired] = useState(false);
+  const [fullscreenActive, setFullscreenActive] = useState(false);
+  const [otherTabDetected, setOtherTabDetected] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [loading, setLoading] = useState('load');
   const [questions, setQuestions] = useState<QuestionType[]>([]);
   const [answers, setAnswers] = useState<Record<number, string>>({});
+  const tabIdRef = useRef('');
+  const otherTabDetectedRef = useRef(false);
+  const activeTabIntervalRef = useRef<number | null>(null);
   const [timeUp, setTimeUp] = useState(false);
   const {currentTheme, isMounted, toggleTheme} = useTheme();
   const themeRef = useRef(currentTheme);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const paletteRef = useRef<HTMLDivElement>(null);
+  const acknowledgeButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [calcOpen, setCalcOpen] = useState(false);
@@ -102,6 +109,176 @@ export default function ContestClient() {
     }
   }, []);
 
+  const enterFullScreen = useCallback(async () => {
+    if (typeof document === 'undefined' || !document.documentElement.requestFullscreen) {
+      return;
+    }
+
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      }
+      setFullscreenActive(true);
+    } catch (error) {
+      setMessage('Please allow fullscreen mode for the contest.');
+      setShowMessage(true);
+      setTimeout(() => setShowMessage(false), 4000);
+    }
+  }, []);
+
+  useEffect(() => {
+    const cid = parseInt(getCookie('competitionId') || '0', 10);
+    const pid = parseInt(getCookie('participantId') || '0', 10);
+    if (!cid || !pid) {
+      return;
+    }
+
+    const tabId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    tabIdRef.current = tabId;
+    const heartbeatKey = `contest-heartbeat-${cid}-${pid}`;
+
+    const setHeartbeat = () => {
+      localStorage.setItem(heartbeatKey, JSON.stringify({tabId, timestamp: Date.now()}));
+    };
+
+    const checkForOtherTab = () => {
+      const raw = localStorage.getItem(heartbeatKey);
+      if (!raw) {
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(raw) as {tabId: string; timestamp: number};
+        const now = Date.now();
+        const stale = now - parsed.timestamp > 5000;
+
+        if (parsed.tabId !== tabId && !stale) {
+          if (!otherTabDetectedRef.current) {
+            otherTabDetectedRef.current = true;
+            setOtherTabDetected(true);
+          }
+          return;
+        }
+      }
+      catch {
+        // ignore malformed storage entries
+      }
+
+      if (otherTabDetectedRef.current) {
+        otherTabDetectedRef.current = false;
+        setOtherTabDetected(false);
+      }
+    };
+
+    setHeartbeat();
+    checkForOtherTab();
+
+    const updateLoop = () => {
+      setHeartbeat();
+      checkForOtherTab();
+    };
+
+    activeTabIntervalRef.current = window.setInterval(updateLoop, 1000);
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === heartbeatKey) {
+        checkForOtherTab();
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      if (activeTabIntervalRef.current !== null) {
+        window.clearInterval(activeTabIntervalRef.current);
+      }
+      window.removeEventListener('storage', handleStorage);
+      const current = localStorage.getItem(heartbeatKey);
+      if (current) {
+        try {
+          const parsed = JSON.parse(current) as {tabId: string};
+          if (parsed.tabId === tabId) {
+            localStorage.removeItem(heartbeatKey);
+          }
+        }
+        catch {
+          localStorage.removeItem(heartbeatKey);
+        }
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleFullscreenChange = async () => {
+      const active = Boolean(document.fullscreenElement);
+      setFullscreenActive(active);
+
+      if (!active) {
+        const pid = parseInt(getCookie('participantId') || '0', 10);
+        setMessage('Full screen was exited. Please remain in full screen or your submission may be affected.');
+        setShowMessage(true);
+        setTimeout(() => setShowMessage(false), 4000);
+        if (pid) {
+          await strike(pid);
+        }
+      }
+    };
+
+    const handleWindowBlur = async () => {
+      const pid = parseInt(getCookie('participantId') || '0', 10);
+      showWarningModal('Window lost focus during contest. Stay focused and in full screen.');
+      if (pid) {
+        await strike(pid);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const blocked = 
+        e.key === 'F12' ||
+        (e.ctrlKey || e.metaKey) && ['c', 'v', 'x', 'a', 's', 'p', 'u', 'i'].includes(e.key.toLowerCase()) ||
+        (e.ctrlKey || e.metaKey) && e.shiftKey && ['i', 'j', 'c'].includes(e.key.toLowerCase());
+
+      if (blocked) {
+        e.preventDefault();
+        showWarningModal('Shortcuts are disabled during the contest.');
+      }
+    };
+
+    const handleVisibility = async () => {
+      if (document.visibilityState !== 'visible') {
+        await handleWindowBlur();
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    window.addEventListener('blur', handleWindowBlur);
+    window.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    enterFullScreen();
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      window.removeEventListener('blur', handleWindowBlur);
+      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [enterFullScreen]);
+
+  useEffect(() => {
+    if (!otherTabDetected) {
+      return;
+    }
+
+    showWarningModal('Multiple contest tabs detected — answers are locked and your submission is being sent.');
+
+    (async () => {
+      const cid = parseInt(getCookie('competitionId') || '0', 10);
+      const pid = parseInt(getCookie('participantId') || '0', 10);
+      await submit(cid, pid, answersRef.current);
+    })();
+  }, [otherTabDetected]);
+
   const handleTestingWindow = useCallback(async () => {
     const pid = parseInt(getCookie('participantId') || '0', 10);
     const res = await setTestingWindow(pid);
@@ -119,7 +296,40 @@ export default function ContestClient() {
   const answersRef = useRef(answers);
   answersRef.current = answers;
 
+  const showWarningModal = (text: string) => {
+    setMessage(text);
+    setAckRequired(true);
+    setShowMessage(true);
+  };
+
+  const showToast = (text: string, duration = 3000) => {
+    setMessage(text);
+    setAckRequired(false);
+    setShowMessage(true);
+    window.setTimeout(() => {
+      setShowMessage(false);
+    }, duration);
+  };
+
+  const handleAcknowledge = () => {
+    setShowMessage(false);
+    setAckRequired(false);
+  };
+
+  useEffect(() => {
+    if (ackRequired && showMessage && acknowledgeButtonRef.current) {
+      acknowledgeButtonRef.current.focus();
+    }
+  }, [ackRequired, showMessage]);
+
+  const answerCount = Object.values(answers).filter((value) => value && value.trim() !== '').length;
+
   const handleSubmit = useCallback(async () => {
+    if (otherTabDetected) {
+      showWarningModal('Multiple contest tabs detected — submission is blocked.');
+      return;
+    }
+
     const cid = parseInt(getCookie('competitionId') || '0', 10);
     const pid = parseInt(getCookie('participantId') || '0', 10);
 
@@ -133,6 +343,10 @@ export default function ContestClient() {
       if (res.message !== 'Already submitted') {
         return;
       }
+    }
+
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => null);
     }
 
     localStorage.removeItem(`answers-${cid}-${pid}`);
@@ -215,17 +429,13 @@ export default function ContestClient() {
       const pid = parseInt(getCookie('participantId') || '0', 10);
       const res = await strike(pid);
       if (res.success && res.warning) {
-        setMessage(res.num === 1 ? 
+        showWarningModal(res.num === 1 ? 
           "Warning: please don't leave competition page" : 
           "Warning: next leave will trigger auto-submit"
         );
-        setShowMessage(true);
-        setTimeout(() => setShowMessage(false), 3000);
       }
       else if (res.success && !res.warning) {
-        setMessage('Automatic Submission');
-        setShowMessage(true);
-        setTimeout(() => setShowMessage(false), 3000);
+        showToast('Automatic Submission');
         await handleSubmit();
       }
     };
@@ -393,6 +603,7 @@ export default function ContestClient() {
               <span className='text-secondary'>{String(timeLeft.seconds).padStart(2, '0')}</span>
               <span className='text-primary'>s</span>
             </div>
+            <p className='mt-3 text-sm text-text_secondary'>Answered {answerCount} / {questions.length} questions</p>
           </ol>
 
           <MathJaxContext>
@@ -441,7 +652,7 @@ export default function ContestClient() {
                             name={`q${i}`}
                             value={option}
                             className='peer hidden transition-all duration-700'
-                            disabled={timeUp || loading !== '' || isPending}
+                            disabled={timeUp || loading !== '' || isPending || otherTabDetected}
                             checked={answers[q.id] === option}
                             onChange={() => handleRadioToggle(q.id, option)}
                           />
@@ -471,7 +682,7 @@ export default function ContestClient() {
               ))}
               <button
                 type='submit'
-                disabled={loading !== '' || isPending}
+                disabled={loading !== '' || isPending || otherTabDetected}
                 onClick={handleSubmit}
                 className='transition-all duration-300 ease-in-out rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-secondary text-text_main gap-2 hover:bg-secondary_dark dark:hover:bg-secondary_dark font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
               >
@@ -479,9 +690,47 @@ export default function ContestClient() {
               </button>
             </form>
           </MathJaxContext>
-          <div className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-primary text-text_main px-4 py-2 rounded shadow-md transition-opacity duration-500 font-mono ${showMessage ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-            {message}
-          </div>
+          <AnimatePresence>
+            {ackRequired && showMessage && (
+              <motion.div
+                className='fixed inset-0 z-50 flex items-center justify-center bg-black/65 px-4'
+                initial={{opacity: 0}}
+                animate={{opacity: 1}}
+                exit={{opacity: 0}}
+                role='alertdialog'
+                aria-modal='true'
+                aria-describedby='warning-modal-description'
+              >
+                <motion.div
+                  className='w-full max-w-lg rounded-3xl bg-background p-8 shadow-2xl border border-primary'
+                  initial={{scale: 0.95, opacity: 0}}
+                  animate={{scale: 1, opacity: 1}}
+                  exit={{scale: 0.95, opacity: 0}}
+                >
+                  <p id='warning-modal-description' className='mb-6 text-text_secondary'>{message}</p>
+                  <button
+                    ref={acknowledgeButtonRef}
+                    onClick={handleAcknowledge}
+                    className='w-full rounded-full bg-secondary px-5 py-3 text-sm font-medium text-text_main transition hover:bg-secondary_dark'
+                  >
+                    I understand
+                  </button>
+                </motion.div>
+              </motion.div>
+            )}
+            {!ackRequired && showMessage && (
+              <motion.div
+                className='fixed bottom-4 left-1/2 z-50 transform -translate-x-1/2 bg-primary text-text_main px-4 py-2 rounded shadow-md transition-opacity duration-500 font-mono'
+                initial={{opacity: 0, y: 20}}
+                animate={{opacity: 1, y: 0}}
+                exit={{opacity: 0, y: 20}}
+                role='status'
+                aria-live='polite'
+              >
+                {message}
+              </motion.div>
+            )}
+          </AnimatePresence>
           <motion.div
             drag
             dragControls={dragControls}

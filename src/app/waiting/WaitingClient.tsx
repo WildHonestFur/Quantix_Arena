@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image';
 import {useState, useEffect, useTransition, useRef} from 'react';
-import {getStartTime} from '@funcs/actions';
+import {getStartTime, getContestHonorCode} from '@funcs/actions';
 import {useRouter} from 'next/navigation';
 import {Settings} from "lucide-react";
 import {themeColors} from "@lib/theme";
@@ -31,6 +31,9 @@ export default function WaitingClient() {
   const [name, setName] = useState('Loading...');
   const [showMessage, setShowMessage] = useState(false);
   const [message, setMessage] = useState('');
+  const [honorCode, setHonorCode] = useState('');
+  const [honorAccepted, setHonorAccepted] = useState(false);
+  const [showHonorModal, setShowHonorModal] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [loading, setLoading] = useState(true);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -208,7 +211,37 @@ export default function WaitingClient() {
 
   useEffect(() => {
     fetchStartTime();
+    fetchHonorCode();
   }, []);
+
+  const fetchHonorCode = async () => {
+    const id = parseInt(getCookie('competitionId') || '0', 10);
+    const res = await getContestHonorCode(id);
+
+    if (!res.success) {
+      return;
+    }
+
+    setHonorCode(res.honorCode || '');
+  };
+
+  const handleJoinClick = () => {
+    if (honorCode && !honorAccepted) {
+      setShowHonorModal(true);
+      return;
+    }
+    startTransition(() => {router.push('/contest')});
+  };
+
+  const handleAcceptHonor = () => {
+    setHonorAccepted(true);
+    setShowHonorModal(false);
+    startTransition(() => {router.push('/contest')});
+  };
+
+  const handleCancelHonor = () => {
+    setShowHonorModal(false);
+  };
 
   const fetchStartTime = async () => {
     const id = parseInt(getCookie('competitionId') || '0', 10);
@@ -345,7 +378,7 @@ export default function WaitingClient() {
           <div className='font-mono flex gap-4 items-center flex-col sm:flex-row'>
             <button
               disabled={!isStarted || loading || isPending}
-              onClick={() => startTransition(() => {router.push('/contest')})}
+              onClick={handleJoinClick}
               className='transition-all duration-300 ease-in-out rounded-full border border-solid border-transparent transition-colors flex items-center justify-center gap-2 font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto bg-primary hover:bg-primary_dark text-text_main cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
             >
               {loading ? 'Loading...' : isPending ? 'Joining...' : 'Join Competition'}
@@ -356,6 +389,48 @@ export default function WaitingClient() {
           </div>
         </main>
       </div>
+      <AnimatePresence>
+        {showHonorModal && (
+          <motion.div
+            className='fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4'
+            initial={{opacity: 0}}
+            animate={{opacity: 1}}
+            exit={{opacity: 0}}
+          >
+            <motion.div
+              className='w-full max-w-2xl rounded-3xl border border-primary bg-background p-8 text-text_secondary shadow-2xl'
+              initial={{scale: 0.95, opacity: 0}}
+              animate={{scale: 1, opacity: 1}}
+              exit={{scale: 0.95, opacity: 0}}
+              transition={{duration: 0.2}}
+            >
+              <h2 className='text-xl font-semibold mb-4'>Honor Code</h2>
+              <div className='max-h-96 overflow-y-auto rounded-2xl border border-secondary/20 bg-primary/5 p-4 text-sm leading-6'>
+                {honorCode.split('\n').map((line, index) => (
+                  <p key={index} className='mb-2 last:mb-0'>{line}</p>
+                ))}
+              </div>
+              <p className='mt-6 text-sm text-text_secondary'>Please agree to this honor code before joining the competition.</p>
+              <div className='mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end'>
+                <button
+                  type='button'
+                  onClick={handleCancelHonor}
+                  className='rounded-full border border-solid border-secondary px-4 py-2 text-sm text-secondary transition hover:bg-secondary/10'
+                >
+                  Cancel
+                </button>
+                <button
+                  type='button'
+                  onClick={handleAcceptHonor}
+                  className='rounded-full bg-secondary px-4 py-2 text-sm text-text_main transition hover:bg-secondary_dark'
+                >
+                  I Agree
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

@@ -470,6 +470,33 @@ export async function findParticularContest(contestId: number) {
   return {success: true, data: data, message: ''};
 }
 
+export async function getContestHonorCode(contestId: number) {
+  const {data, error} = await supabase
+    .from('competitions')
+    .select('honor_code')
+    .eq('id', contestId)
+    .maybeSingle();
+
+  if (error) {
+    return {success: false, message: 'Server error', honorCode: ''};
+  }
+
+  return {success: true, honorCode: data?.honor_code ?? ''};
+}
+
+export async function updateContestHonorCode(contestId: number, honorCode: string) {
+  const {error} = await supabase
+    .from('competitions')
+    .update({honor_code: honorCode})
+    .eq('id', contestId);
+
+  if (error) {
+    return {success: false, message: 'Server error'};
+  }
+
+  return {success: true, message: ''};
+}
+
 export async function getTestingWindows(contestId: number) {
   const {data, error} = await supabase
     .rpc('get_testing_windows', {
