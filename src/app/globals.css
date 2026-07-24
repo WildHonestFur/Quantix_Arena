@@ -96,6 +96,30 @@
   --text_placeholder_secondary: #242424;
 }
 
+.emerald {
+  --background: #071a12;
+  --primary: #10b981;
+  --primary_dark: #059669;
+  --secondary: #047857;
+  --secondary_dark: #065f46;
+  --text_main: #eeeeee;
+  --text_secondary: #e6f7f0;
+  --text_placeholder: #2d6a4f;
+  --text_placeholder_secondary: #1b4332;
+}
+
+.dune {
+  --background: #1c1613;
+  --primary: #d97706;
+  --primary_dark: #b45309;
+  --secondary: #92400e;
+  --secondary_dark: #78350f;
+  --text_main: #eeeeee;
+  --text_secondary: #fef3c7;
+  --text_placeholder: #78350f;
+  --text_placeholder_secondary: #451a03;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-primary: var(--primary);

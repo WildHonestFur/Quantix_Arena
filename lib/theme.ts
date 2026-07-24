@@ -75,5 +75,27 @@ export const themeColors = {
     text_main: "#eeeeee",
     text_secondary: "#eeeeee",
     logo: "/cosmos.png"
+  },
+  emerald: {
+    name: "emerald",
+    background: "#071a12",
+    primary: "#10b981",
+    primary_dark: "#059669",
+    secondary: "#047857",
+    secondary_dark: "#065f46",
+    text_main: "#eeeeee",
+    text_secondary: "#e6f7f0",
+    logo: "/emerald.png"
+  },
+  dune: {
+    name: "dune",
+    background: "#1c1613",
+    primary: "#d97706",
+    primary_dark: "#b45309",
+    secondary: "#92400e",
+    secondary_dark: "#78350f",
+    text_main: "#eeeeee",
+    text_secondary: "#fef3c7",
+    logo: "/dune.png"
   }
 };
